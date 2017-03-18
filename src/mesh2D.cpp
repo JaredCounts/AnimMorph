@@ -31,8 +31,6 @@ void Mesh2D::AddTriangle(const Vector3i indices)
 	triangles.col(triangles.cols() - 1) = indices;
 }
 
-
-
 int Mesh2D::PointCount() const
 {
 	return points.cols();

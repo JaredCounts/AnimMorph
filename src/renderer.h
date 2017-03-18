@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mesh2D.h"
+#include "Camera/camera.h"
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -10,7 +11,7 @@
 class Renderer
 {
 public:
-	Renderer();
+	Renderer(P_Camera camera);
 
 	bool Init();
 
@@ -19,6 +20,8 @@ public:
 	void Render(const Mesh2D &mesh);
 
 private:
+	P_Camera camera;
+
 	void CheckStatus(GLuint obj)
 	{
 		//GLint status = GL_FALSE;

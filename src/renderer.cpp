@@ -1,6 +1,7 @@
 #include "renderer.h"
 
-Renderer::Renderer()
+Renderer::Renderer(P_Camera camera) :
+	camera(camera)
 {
 }
 
@@ -26,7 +27,8 @@ void Renderer::Clear()
 
 void Renderer::Render(const Mesh2D & mesh)
 {
-
+	// XXX: a lot of this stuff doesn't need to be done every single frame
+	//      at some point we may want to cache things
 	const Matrix2Xf points = mesh.GetPoints();
 	const Matrix3Xi triangles = mesh.GetTriangles();
 
@@ -34,20 +36,23 @@ void Renderer::Render(const Mesh2D & mesh)
 	(
 		410 core,
 		layout(location = 0) in vec2 position;
-	void main()
-	{
-		gl_Position = vec4(position, 0.0, 1.0);
-	}
+		
+		uniform mat4 modelViewProjection;
+
+		void main()
+		{
+			gl_Position = modelViewProjection * vec4(position, 0.0, 1.0);
+		}
 	);
 
 	const char* frag = GLSL
 	(
 		410 core,
 		out vec4 FragColor;
-	void main()
-	{
-		FragColor = vec4(0.6, 1.0, 1.0, 1.0);
-	}
+		void main()
+		{
+			FragColor = vec4(0.6, 1.0, 1.0, 1.0);
+		}
 	);
 
 	GLuint program = LoadProgram(vert, NULL, frag);
@@ -77,6 +82,21 @@ void Renderer::Render(const Mesh2D & mesh)
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	glUseProgram(program);
+
+	// Get a handle for our "MVP" uniform
+	GLuint matrixID = glGetUniformLocation(program, "modelViewProjection");
+
+	Matrix4f projection = camera->projectionMatrix();
+	Matrix4f view = camera->viewMatrix();
+	Matrix4f model = Matrix4f::Identity();
+
+	Matrix4f modelViewProjection = projection * view; // *model;
+
+	// Send our transformation to the currently bound shader, 
+	// in the "MVP" uniform
+	glUniformMatrix4fv(matrixID, 1, GL_FALSE, modelViewProjection.data());
+
+
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);

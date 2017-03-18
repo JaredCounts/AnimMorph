@@ -2,13 +2,6 @@
 
 #include "linearAlgebra.h"
 
-// Include GLEW
-#include <GL/glew.h>
-
-// Include GLFW
-#include <GLFW/glfw3.h>
-
-
 class Mesh2D
 {
 public:
@@ -16,22 +9,22 @@ public:
 
 	void AddPoint(const Vector2f point);
 
-	void AddPoints(const V_Vector2f points);
-
 	void AddTriangle(const Vector3i indices);
 
-	void Predraw();
+	int PointCount() const;
 
-	void Draw();
+	int TriangleCount() const;
+
+	const Matrix2Xf &GetPoints() const;
+
+	const Matrix3Xi &GetTriangles() const;
 
 private:
 	// geometry
-	V_Vector2f points;
+	// each column contains 2 coordinate values
+	Matrix2Xf points;
 
 	// topology
-	// each triangle contains 3 indices
-	V_Vector3i triangles;
-
-	GLuint program;
-	GLuint VAO;
+	// each column contains 3 indices
+	Matrix3Xi triangles; // 3 rows, X columns
 };

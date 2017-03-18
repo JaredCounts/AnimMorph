@@ -6,6 +6,7 @@
 using namespace std;
 
 #include "mesh2D.h"
+#include "renderer.h"
 
 int main(int argc, char** argv)
 {
@@ -34,14 +35,6 @@ int main(int argc, char** argv)
 	cout << "GL_RENDERER                 : " << glGetString(GL_RENDERER) << endl;
 	cout << "GL_SHADING_LANGUAGE_VERSION : " << glGetString(GL_SHADING_LANGUAGE_VERSION) << endl;
 
-	glewExperimental = true;
-	GLenum err = glewInit();
-	if (err != GLEW_OK)
-	{
-		cerr << "Glew init failed!" << endl;
-		cerr << "Error: " << glewGetErrorString(err) << endl;
-	}
-
 
 	Mesh2D mesh;
 	mesh.AddPoint(Vector2f(0.0f, 0.8f));
@@ -50,19 +43,16 @@ int main(int argc, char** argv)
 			
 	mesh.AddTriangle(Vector3i(0, 1, 2));
 
-	mesh.Predraw();
-
-	// initData();
-
+	Renderer renderer;
+	renderer.Init();
 
 	// Check if the ESC key was pressed or the window was closed
 	while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
 		glfwWindowShouldClose(window) == 0)
 	{
-		glClearColor(0, 0, 0, 0);
-		glClear(GL_COLOR_BUFFER_BIT);
+		renderer.Clear();
+		renderer.Render(mesh);
 
-		mesh.Draw();
 
 		glfwSwapBuffers(window);
 

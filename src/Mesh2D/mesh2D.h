@@ -1,6 +1,6 @@
 #pragma once
 
-#include "linearAlgebra.h"
+#include "../linearAlgebra.h"
 
 class Mesh2D
 {

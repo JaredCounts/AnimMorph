@@ -5,12 +5,12 @@
 #include <iostream>
 using namespace std;
 
-#include "mesh2D.h"
-#include "renderer.h"
+#include "Mesh2D/mesh2D.h"
+#include "Renderer/renderer.h"
 #include "Camera/camera.h"
 
-#include "mouseManager.h"
-#include "mouseable.h"
+#include "Mouse/mouseManager.h"
+#include "Mouse/mouseable.h"
 
 MouseManager mouseManager;
 

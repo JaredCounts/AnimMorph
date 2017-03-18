@@ -6,7 +6,7 @@
 
 #include "../linearAlgebra.h"
 
-#include "../mouseable.h"
+#include "../Mouse/mouseable.h"
 
 class Camera: public Mouseable
 {

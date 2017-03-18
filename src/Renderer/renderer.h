@@ -1,7 +1,7 @@
 #pragma once
 
-#include "mesh2D.h"
-#include "Camera/camera.h"
+#include "../Mesh2D/mesh2D.h"
+#include "../Camera/camera.h"
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>

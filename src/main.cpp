@@ -8,102 +8,13 @@ using namespace std;
 #include "mesh2D.h"
 #include "renderer.h"
 #include "Camera/camera.h"
+
+#include "mouseManager.h"
 #include "mouseable.h"
 
-
+MouseManager mouseManager;
 
 double mouseX, mouseY;
-Mouseable::MouseButton mouseButtonState;
-std::vector<P_Mouseable> mouseables;
-
-void mouseButtonFunction(GLFWwindow *window, int button, int action, int mods)
-{   // xxx should probably just pass this logic onto Mouseable
-	Mouseable::MouseButton prevMouseState = mouseButtonState;
-
-	if (action == GLFW_PRESS)
-	{
-		switch (button)
-		{
-		case GLFW_MOUSE_BUTTON_LEFT:
-			if (mods & GLFW_MOD_CONTROL)
-			{
-				mouseButtonState = Mouseable::MouseButton::MIDDLE;
-			}
-			else if (mods & GLFW_MOD_ALT)
-			{
-				mouseButtonState = Mouseable::MouseButton::RIGHT;
-			}
-			else
-			{
-				mouseButtonState = Mouseable::MouseButton::LEFT;
-			}
-			break;
-		case GLFW_MOUSE_BUTTON_MIDDLE:
-			mouseButtonState = Mouseable::MouseButton::MIDDLE;
-			break;
-		case GLFW_MOUSE_BUTTON_RIGHT:
-			mouseButtonState = Mouseable::MouseButton::RIGHT;
-			break;
-		default:
-			mouseButtonState = Mouseable::MouseButton::NONE;
-			break;
-		}
-	}
-	else if (action == GLFW_RELEASE)
-	{
-		mouseButtonState = Mouseable::MouseButton::NONE;
-	}
-
-	if (mouseButtonState != prevMouseState)
-	{
-		if (mouseButtonState == Mouseable::MouseButton::NONE)
-		{ // mouse released
-			for (auto &mouseable : mouseables)
-			{
-				mouseable->MouseRelease((int)mouseX, (int)mouseY);
-			}
-		}
-		else
-		{ // mouse pressed
-			for (auto &mouseable : mouseables)
-			{
-				mouseable->MouseClick(mouseButtonState, (int)mouseX, (int)mouseY);
-			}
-		}
-	}
-
-}
-void mousePositionFunction(GLFWwindow *window, double x, double y)
-{
-	double mousePrevX = mouseX;
-	double mousePrevY = mouseY;
-	
-	mouseX = x;
-	mouseY = y;
-
-	if (mouseButtonState == Mouseable::MouseButton::NONE)
-	{ // mouse motion
-		for (auto &mouseable : mouseables)
-		{
-			mouseable->MouseMotion((int)mousePrevX, (int)mousePrevY, (int)mouseX, (int)mouseY);
-		}
-	}
-	else
-	{ // mouse drag
-		for (auto &mouseable : mouseables)
-		{
-			mouseable->MouseDrag(mouseButtonState, (int)mousePrevX, (int)mousePrevY, (int)mouseX, (int)mouseY);
-		}
-	}
-}
-void mouseEnterExitFunction(GLFWwindow *window, int entered)
-{
-	if (entered == GL_FALSE)
-	{
-		// act as a mouse button release
-		mouseButtonFunction(window, -1, -1, -1);
-	}
-}
 
 P_Camera camera(new Camera());
 
@@ -162,19 +73,71 @@ int main(int argc, char** argv)
 	camera->SetDistance(5);
 	camera->SetCenter(Vector3f::Zero());
 
-	mouseables.push_back(camera);
-
 	windowResizeFunction(window, 640, 480);
 
 	Renderer renderer(camera);
 	renderer.Init();
 
-	//int mousePrevX = 0;
-	//int mousePrevY = 0;
+
+	auto mouseButtonFunction = [](GLFWwindow *window, int button, int action, int mods)
+	{
+		Mouseable::MouseButton mouseButtonState;
+
+		// determine mouse state
+		if (action == GLFW_PRESS)
+		{
+			switch (button)
+			{
+			case GLFW_MOUSE_BUTTON_LEFT:
+				if (mods & GLFW_MOD_CONTROL)
+				{
+					mouseButtonState = Mouseable::MouseButton::MIDDLE;
+				}
+				else if (mods & GLFW_MOD_ALT)
+				{
+					mouseButtonState = Mouseable::MouseButton::RIGHT;
+				}
+				else
+				{
+					mouseButtonState = Mouseable::MouseButton::LEFT;
+				}
+				break;
+			case GLFW_MOUSE_BUTTON_MIDDLE:
+				mouseButtonState = Mouseable::MouseButton::MIDDLE;
+				break;
+			case GLFW_MOUSE_BUTTON_RIGHT:
+				mouseButtonState = Mouseable::MouseButton::RIGHT;
+				break;
+			default:
+				mouseButtonState = Mouseable::MouseButton::NONE;
+				break;
+			}
+		}
+		else if (action == GLFW_RELEASE)
+		{
+			mouseButtonState = Mouseable::MouseButton::NONE;
+		}
+
+		// feed it into mouseManager
+		mouseManager.MouseButtonChange(mouseButtonState);
+	};
+	
+	auto mousePositionFunction = [](GLFWwindow *window, double x, double y)
+	{
+		mouseManager.MouseMove((int)x, (int)y);
+	};
+
+	auto mouseScrollFunction = [](GLFWwindow *window, double xOffset, double yOffset)
+	{
+		mouseManager.MouseScroll(xOffset, yOffset);
+	};
 
 	glfwSetMouseButtonCallback(window, mouseButtonFunction);
 	glfwSetCursorPosCallback(window, mousePositionFunction);
-	glfwSetCursorEnterCallback(window, mouseEnterExitFunction);
+	glfwSetScrollCallback(window, mouseScrollFunction);
+	
+
+	mouseManager.AddMouseable(camera);
 
 	glfwSetWindowSizeCallback(window, windowResizeFunction);
 
@@ -184,7 +147,6 @@ int main(int argc, char** argv)
 	{
 		renderer.Clear();
 		renderer.Render(mesh);
-
 
 		glfwSwapBuffers(window);
 

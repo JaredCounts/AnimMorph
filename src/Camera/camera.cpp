@@ -94,6 +94,17 @@ void Camera::MouseRelease(int x, int y)
 	mStartDistance = mCurrentDistance;
 }
 
+void Camera::MouseScroll(double xOffset, double yOffset)
+{ // XXX this can probably be combined with DistanceZoom
+	const float MIN_DISTANCE = 0.1f;
+	const float SCROLL_FACTOR = 0.05f;
+
+	mCurrentDistance = mCurrentDistance + SCROLL_FACTOR * yOffset * mCurrentDistance;
+
+	mCurrentDistance = max(MIN_DISTANCE, mCurrentDistance);
+	mStartDistance = mCurrentDistance;
+}
+
 
 void Camera::ArcBallRotation(int x, int y)
 {

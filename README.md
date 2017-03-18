@@ -10,4 +10,6 @@ Implementation of Chen, Weber, Keren, and Ben-Chen's "Planar Shape Interpolation
 * Would be nice if we shared libraries with my other project (e.g., Camera, Mouseable, etc. were copy pasted from elsewhere)
 * Sort things out in their own directories
 * Separate window logic from loop logic
-* Actually implement the paper!
+* Implement the paper!
+* Model loading
+* Convert texture to mesh

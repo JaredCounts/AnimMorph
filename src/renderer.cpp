@@ -17,6 +17,11 @@ bool Renderer::Init()
 	}
 }
 
+void Renderer::ReshapeDisplay(int width, int height)
+{
+	glViewport(0, 0, width, height);
+}
+
 void Renderer::Clear()
 {
 	glClearColor(0, 0, 0, 0);

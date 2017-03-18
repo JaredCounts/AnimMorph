@@ -17,21 +17,7 @@ MouseManager mouseManager;
 double mouseX, mouseY;
 
 P_Camera camera(new Camera());
-
-void windowResizeFunction(GLFWwindow *window, int width, int height)
-{ 
-	camera->SetDimensions(width, height);
-
-	camera->SetViewport(0, 0, width, height);
-	// camera->ApplyViewport();
-
-	camera->SetPerspective(50);
-
-	// xxx: this is renderer specific
-	glViewport(0, 0, width, height);
-
-	// renderer->ReshapeDisplay(width, height);
-}
+P_Renderer renderer(new Renderer(camera));
 
 int main(int argc, char** argv)
 {
@@ -61,7 +47,6 @@ int main(int argc, char** argv)
 	cout << "GL_RENDERER                 : " << glGetString(GL_RENDERER) << endl;
 	cout << "GL_SHADING_LANGUAGE_VERSION : " << glGetString(GL_SHADING_LANGUAGE_VERSION) << endl;
 
-
 	Mesh2D mesh;
 	mesh.AddPoint(Vector2f(0.0f, 0.8f));
 	mesh.AddPoint(Vector2f(-0.8f, 0.0f));
@@ -73,11 +58,7 @@ int main(int argc, char** argv)
 	camera->SetDistance(5);
 	camera->SetCenter(Vector3f::Zero());
 
-	windowResizeFunction(window, 640, 480);
-
-	Renderer renderer(camera);
-	renderer.Init();
-
+	renderer->Init();
 
 	auto mouseButtonFunction = [](GLFWwindow *window, int button, int action, int mods)
 	{
@@ -132,10 +113,20 @@ int main(int argc, char** argv)
 		mouseManager.MouseScroll(xOffset, yOffset);
 	};
 
+	auto windowResizeFunction = [](GLFWwindow *window, int width, int height)
+	{
+		camera->SetDimensions(width, height);
+		camera->SetViewport(0, 0, width, height);
+		camera->SetPerspective(50);
+
+		renderer->ReshapeDisplay(width, height);
+	};
+
+	windowResizeFunction(window, 640, 480);
+
 	glfwSetMouseButtonCallback(window, mouseButtonFunction);
 	glfwSetCursorPosCallback(window, mousePositionFunction);
 	glfwSetScrollCallback(window, mouseScrollFunction);
-	
 
 	mouseManager.AddMouseable(camera);
 
@@ -145,8 +136,8 @@ int main(int argc, char** argv)
 	while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
 		glfwWindowShouldClose(window) == 0)
 	{
-		renderer.Clear();
-		renderer.Render(mesh);
+		renderer->Clear();
+		renderer->Render(mesh);
 
 		glfwSwapBuffers(window);
 

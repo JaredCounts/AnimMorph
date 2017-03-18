@@ -15,6 +15,8 @@ public:
 
 	bool Init();
 
+	void ReshapeDisplay(int width, int height);
+
 	void Clear();
 
 	void Render(const Mesh2D &mesh);
@@ -24,15 +26,15 @@ private:
 
 	void CheckStatus(GLuint obj)
 	{
-		//GLint status = GL_FALSE;
-		//if (glIsShader(obj)) glGetShaderiv(obj, GL_COMPILE_STATUS, &status);
-		//if (glIsProgram(obj)) glGetProgramiv(obj, GL_LINK_STATUS, &status);
-		//if (status == GL_TRUE) return;
-		//GLchar log[1 << 16] = { 0 };
-		//if (glIsShader(obj)) glGetShaderInfoLog(obj, sizeof(log), NULL, log);
-		//if (glIsProgram(obj)) glGetProgramInfoLog(obj, sizeof(log), NULL, log);
-		//std::cerr << log << std::endl;
-		//exit(-1);
+		GLint status = GL_FALSE;
+		if (glIsShader(obj)) glGetShaderiv(obj, GL_COMPILE_STATUS, &status);
+		if (glIsProgram(obj)) glGetProgramiv(obj, GL_LINK_STATUS, &status);
+		if (status == GL_TRUE) return;
+		GLchar log[1 << 16] = { 0 };
+		if (glIsShader(obj)) glGetShaderInfoLog(obj, sizeof(log), NULL, log);
+		if (glIsProgram(obj)) glGetProgramInfoLog(obj, sizeof(log), NULL, log);
+		std::cerr << log << std::endl;
+		exit(-1);
 	}
 
 	void AttachShader(GLuint program, GLenum type, const char* src)
@@ -57,3 +59,5 @@ private:
 	}
 
 };
+
+typedef std::shared_ptr<Renderer> P_Renderer;

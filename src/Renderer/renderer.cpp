@@ -34,7 +34,7 @@ void Renderer::Render(const Mesh2D &mesh)
 {
 	// XXX: a lot of this stuff doesn't need to be done every single frame
 	//      at some point we may want to cache things
-	const Matrix2Xf points = mesh.GetPoints();
+	const Matrix2Xf points = mesh.GetPoints_World();
 	const Matrix3Xi triangles = mesh.GetTriangles();
 
 	const char* vert = GLSL

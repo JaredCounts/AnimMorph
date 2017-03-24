@@ -14,8 +14,6 @@ using namespace std;
 
 MouseManager mouseManager;
 
-double mouseX, mouseY;
-
 P_Camera camera(new Camera());
 P_Renderer renderer(new Renderer(camera));
 
@@ -58,15 +56,30 @@ int main(int argc, char** argv)
 		mesh.AddPoint(Vector2f(x, y));
 		mesh.AddPoint(Vector2f(x, y + 1));
 	}
-	//mesh.AddPoint(Vector2f(0.0f, 0.8f));
-	//mesh.AddPoint(Vector2f(-0.8f, 0.0f));
-	//mesh.AddPoint(Vector2f(0.8f, 0.0f));
-	for (unsigned int i = 0; i < trussWidth-1; i++)
+	for (unsigned int i = 0; i < trussWidth - 1; i++)
 	{
 		int j = i * 2;
 		mesh.AddTriangle(Vector3i(j, j + 1, j + 2));
 		mesh.AddTriangle(Vector3i(j + 1, j + 3, j + 2));
 	}
+
+	// copy mesh
+	Mesh2D mesh2(mesh);
+	float angleStepSize = (2 * M_PI) / (trussWidth - 1);
+	float radius = trussWidth / (2 * M_PI);
+	for (unsigned int i = 0; i < trussWidth; i++)
+	{
+		float angle = i * angleStepSize;
+		float x = radius * cos(angle);
+		float y = radius * sin(angle);
+		mesh2.SetPoint(i*2, Vector2f(x, y));
+
+		x = (radius + 1) * cos(angle);
+		y = (radius + 1) * sin(angle);
+		mesh2.SetPoint(i*2 + 1, Vector2f(x, y));
+	}
+	
+	mesh2.Translate(Vector2f(0, -5));
 
 	camera->SetDimensions(width, height);
 	camera->SetDistance(5);
@@ -152,6 +165,7 @@ int main(int argc, char** argv)
 	{
 		renderer->Clear();
 		renderer->Render(mesh);
+		renderer->Render(mesh2);
 
 		glfwSwapBuffers(window);
 

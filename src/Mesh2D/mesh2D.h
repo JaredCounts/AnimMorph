@@ -5,19 +5,30 @@
 class Mesh2D
 {
 public:
+	typedef Transform<float, 2, TransformTraits::Affine> Transform2f;
+
+	Mesh2D(const Mesh2D &mesh);
+
 	Mesh2D();
 
 	void AddPoint(const Vector2f point);
 
 	void AddTriangle(const Vector3i indices);
 
-	int PointCount() const;
+	void SetPoint(const unsigned int index, const Vector2f point);
+	
+	void Translate(const Vector2f &offset);
 
+	int PointCount() const;
 	int TriangleCount() const;
 
-	const Matrix2Xf &GetPoints() const;
-
+	const Matrix2Xf GetPoints_World() const;
+	const Matrix2Xf &GetPoints_Local() const;
 	const Matrix3Xi &GetTriangles() const;
+
+	const Matrix2Xi GetEdges() const;
+
+	const Transform2f &GetTransform() const;
 
 private:
 	// geometry
@@ -27,4 +38,7 @@ private:
 	// topology
 	// each column contains 3 indices
 	Matrix3Xi triangles; // 3 rows, X columns
+
+	// basis
+	Transform2f transform;
 };

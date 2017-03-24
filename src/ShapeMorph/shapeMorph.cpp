@@ -2,16 +2,15 @@
 
 Mesh2D ShapeMorph::Interpolate(const Mesh2D &start, const Mesh2D &end, float t)
 {
-	// matrices must be topoligically the same
+	// matrices must be topologically the same
 	assert((start.GetTriangles() - end.GetTriangles()).norm() == 0);
 
 	// 1. generate new edge lengths
 	const Matrix2Xf startPoints = start.GetPoints_Local();
 	const Matrix2Xf endPoints = end.GetPoints_Local();
 
-	// topology is same, so the edge indices will be identical
+	// topology is same, so the edge indices should be identical between both meshes
 	const Matrix2Xi edges = start.GetEdges();
-	assert((edges - end.GetEdges()).norm() == 0);
 
 	unsigned int edgeCount = edges.cols();
 
@@ -42,5 +41,20 @@ void ShapeMorph::FlattenEdges(VectorXf &edgeLengths, const VectorXi edges)
 
 		// 2. Generate Hessian
 
-		// 3. Update "u" vector
+		// 3. Update "u" vector 
+			// xxx: side remark, what do we call "u"?
+			// they're the exponential edge contributions 
+			// at each vector to the flattened edge
+			// i.e. flatEdgeLength = e^(u[i] + u[j]) * edgeLength
+			// so u = "vertexLogEdgeContribution"
+}
+
+void ShapeMorph::EmbedMesh(MatrixXf & points, const VectorXf & edgeLengths, const const VectorXi edges, const Matrix3Xi triangles)
+{
+	// 1. choose a point and direction
+
+	// 2. while set of neighboring triangles is not empty:
+
+		// embed neighboring triangle
+
 }

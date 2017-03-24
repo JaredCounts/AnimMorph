@@ -10,4 +10,10 @@ public:
 private:
 	
 	void FlattenEdges(VectorXf &edgeLengths, const VectorXi edges);
+
+	void EmbedMesh(MatrixXf &points, 
+					const VectorXf &edgeLengths, 
+					const const VectorXi edges, 
+					const Matrix3Xi triangles);
+
 };

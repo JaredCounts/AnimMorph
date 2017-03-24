@@ -30,7 +30,7 @@ void Renderer::Clear()
 
 #define GLSL(version, shader) "#version " #version "\n" #shader
 
-void Renderer::Render(const Mesh2D & mesh)
+void Renderer::Render(const Mesh2D &mesh)
 {
 	// XXX: a lot of this stuff doesn't need to be done every single frame
 	//      at some point we may want to cache things
@@ -103,7 +103,7 @@ void Renderer::Render(const Mesh2D & mesh)
 
 
 	glBindVertexArray(VAO);
-	glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, 3 * triangles.size(), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 
 

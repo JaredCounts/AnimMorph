@@ -30,7 +30,9 @@ int main(int argc, char** argv)
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* window = glfwCreateWindow(640, 480, "Hello window", NULL, NULL);
+	int width = 1080, height = 720;
+
+	GLFWwindow* window = glfwCreateWindow(width, height, "Hello window", NULL, NULL);
 	if (!window)
 	{
 		cerr << "Error on window creating" << endl;
@@ -48,13 +50,25 @@ int main(int argc, char** argv)
 	cout << "GL_SHADING_LANGUAGE_VERSION : " << glGetString(GL_SHADING_LANGUAGE_VERSION) << endl;
 
 	Mesh2D mesh;
-	mesh.AddPoint(Vector2f(0.0f, 0.8f));
-	mesh.AddPoint(Vector2f(-0.8f, 0.0f));
-	mesh.AddPoint(Vector2f(0.8f, 0.0f));
-			
-	mesh.AddTriangle(Vector3i(0, 1, 2));
+	int trussWidth = 10;
+	for (unsigned int i = 0; i < trussWidth; i++)
+	{
+		float x = i;
+		float y = 0.f;
+		mesh.AddPoint(Vector2f(x, y));
+		mesh.AddPoint(Vector2f(x, y + 1));
+	}
+	//mesh.AddPoint(Vector2f(0.0f, 0.8f));
+	//mesh.AddPoint(Vector2f(-0.8f, 0.0f));
+	//mesh.AddPoint(Vector2f(0.8f, 0.0f));
+	for (unsigned int i = 0; i < trussWidth-1; i++)
+	{
+		int j = i * 2;
+		mesh.AddTriangle(Vector3i(j, j + 1, j + 2));
+		mesh.AddTriangle(Vector3i(j + 1, j + 3, j + 2));
+	}
 
-	camera->SetDimensions(640, 480);
+	camera->SetDimensions(width, height);
 	camera->SetDistance(5);
 	camera->SetCenter(Vector3f::Zero());
 
@@ -122,7 +136,7 @@ int main(int argc, char** argv)
 		renderer->ReshapeDisplay(width, height);
 	};
 
-	windowResizeFunction(window, 640, 480);
+	windowResizeFunction(window, width, height);
 
 	glfwSetMouseButtonCallback(window, mouseButtonFunction);
 	glfwSetCursorPosCallback(window, mousePositionFunction);

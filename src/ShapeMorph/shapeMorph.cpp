@@ -70,6 +70,9 @@ void ShapeMorph::FlattenEdgeLengths(
 	const Matrix3Xi &triangles,
 	const unsigned int pointCount)
 {
+	// xxx: do we need to place special consideration in boundary edges?
+	// xxx: one can do solver.analyzePattern to speed up factorization btwn iterations
+	//      since topology (and therefore the matrix) doesn't change
 	const unsigned int edgeCount = edgeLengths.size();
 	assert(edgeCount == edges.cols());
 

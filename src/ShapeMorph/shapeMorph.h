@@ -9,7 +9,12 @@ public:
 
 private:
 	
-	void FlattenEdges(VectorXf &edgeLengths, const VectorXi edges);
+	void FlattenEdgeLengths(
+		VectorXf &edgeLengths,
+		const VectorXf &edgeLengthsOriginal,
+		const Matrix2Xi &edges,
+		const Matrix3Xi &triangles,
+		const unsigned int pointCount);
 
 	void EmbedMesh(MatrixXf &points, 
 					const VectorXf &edgeLengths, 

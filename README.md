@@ -19,10 +19,12 @@ Some planned contributions:
 * Mesh loading
 * Texturing
 * Convert texture to mesh
-* Bounded Distortion Morph
-	* ~~Edge interpolation~~
-	* Flatten Mesh using Conformally Equivalent Triangle Mesh
-	* Embed mesh into 2D Euclidean space
+* Embed mesh so it has the same relative orientation as original mesh.
+* Clean up Shape morph code
+	* Separate out some kind of MeshHelper for efficiently mapping vertices to edges, edges to triangles, etc.
+	* Optimizations?
+		* For instance, all topological math can be done only once.
+		* Profiling (memory and time)
 * B-spline mesh interpolation
 * Mesh posing
 * Mesh animating

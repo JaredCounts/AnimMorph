@@ -495,7 +495,7 @@ void ShapeMorph::EmbedMesh(
 		const float &edgeLengthC = edgeLengths[edgeIndexC];
 
 		points.col(vertIndexA) = Vector2f(0, 0);
-		points.col(vertIndexB) = Vector2f(edgeIndexC, 0);
+		points.col(vertIndexB) = Vector2f(edgeLengthC, 0);
 		float x = (Sq(edgeLengthB) + Sq(edgeLengthC) - Sq(edgeLengthA)) / (2 * edgeLengthC);
 		float y = sqrt(Sq(edgeLengthB) - Sq(x));
 		points.col(vertIndexC) = Vector2f(x, y);

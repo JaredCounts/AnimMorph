@@ -9,6 +9,8 @@ public:
 
 	Mesh2D(const Mesh2D &mesh);
 
+	Mesh2D(Matrix2Xf points, Matrix3Xi triangles);
+
 	Mesh2D();
 
 	void AddPoint(const Vector2f point);

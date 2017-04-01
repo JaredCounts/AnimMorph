@@ -12,6 +12,8 @@ using namespace std;
 #include "Mouse/mouseManager.h"
 #include "Mouse/mouseable.h"
 
+#include "ShapeMorph\shapeMorph.h"
+
 MouseManager mouseManager;
 
 P_Camera camera(new Camera());
@@ -80,6 +82,8 @@ int main(int argc, char** argv)
 	}
 	
 	mesh2.Translate(Vector2f(0, -5));
+
+	Mesh2D mesh3 = ShapeMorph::Interpolate(mesh, mesh2, 0.5);
 
 	camera->SetDimensions(width, height);
 	camera->SetDistance(5);
@@ -166,6 +170,7 @@ int main(int argc, char** argv)
 		renderer->Clear();
 		renderer->Render(mesh);
 		renderer->Render(mesh2);
+		renderer->Render(mesh3);
 
 		glfwSwapBuffers(window);
 

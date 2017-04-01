@@ -10,6 +10,11 @@ Mesh2D::Mesh2D(const Mesh2D & mesh) :
 {
 }
 
+Mesh2D::Mesh2D(Matrix2Xf points, Matrix3Xi triangles) :
+	points(points), triangles(triangles)
+{
+}
+
 Mesh2D::Mesh2D() :
 	points(),
 	triangles(),

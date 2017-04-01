@@ -45,6 +45,8 @@ Mesh2D ShapeMorph::Interpolate(const Mesh2D &start, const Mesh2D &end, float t)
 
 	const unsigned int pointCount = start.PointCount();
 
+	const unsigned int triangleCount = triangles.cols();
+
 	// we need to some how map triangles to edges so we can calculate angles
 	// make a map of edge to edgeIndex
 	// this will make it easy and efficient to access edges from triangles
@@ -66,16 +68,34 @@ Mesh2D ShapeMorph::Interpolate(const Mesh2D &start, const Mesh2D &end, float t)
 	assert(edgeToEdgeIndex[IntPair(edges(0, 0), edges(1, 0))] == 0);
 	assert(edgeToEdgeIndex[IntPair(edges(1, 0), edges(0, 0))] == 0);
 
+	// generate a map of edge indices to vector of triangle indices
+	IntToInts edgeIndexToTriIndices;
+	for (unsigned int triIndex = 0; triIndex < triangleCount; triIndex++)
+	{
+		const Vector3i &triangle = triangles.col(triIndex);
+		for (unsigned int innerEdgeIndex = 0; innerEdgeIndex < 3; innerEdgeIndex++)
+		{
+			IntPair edge(triangle[innerEdgeIndex], triangle[(innerEdgeIndex + 1) % 3]);
+
+			assert(edgeToEdgeIndex.find(edge) != edgeToEdgeIndex.end());
+
+			const unsigned int edgeIndex = edgeToEdgeIndex.find(edge)->second;
+
+			edgeIndexToTriIndices[edgeIndex].push_back(triIndex);
+		}
+	}
+
 	// 2. flatten mesh using Conformal Equivalence of Triangle Mesh
 	std::cout << "2. flattening mesh.\n";
-	FlattenEdgeLengths(interpEdgeLengths, edgeLengthsCopy, edges, triangles, pointCount, edgeToEdgeIndex);
+	FlattenEdgeLengths(interpEdgeLengths, edgeLengthsCopy, edges, triangles, pointCount, edgeToEdgeIndex, edgeIndexToTriIndices);
 	
+	std::cout << "Edge Lengths.\n============\n";
+	std::cout << interpEdgeLengths << '\n';
+
 	// 3. Embed mesh into 2D Euclidean space
 	std::cout << "3. embedding mesh.\n";
 	Matrix2Xf points = Matrix2Xf::Zero(2, pointCount);
-	EmbedMesh(points, interpEdgeLengths, triangles, edgeToEdgeIndex);
-
-	std::cout << "Done!\n";
+	EmbedMesh(points, interpEdgeLengths, triangles, edgeToEdgeIndex, edgeIndexToTriIndices);
 
 	return Mesh2D(points, triangles);
 }
@@ -122,7 +142,8 @@ void ShapeMorph::FlattenEdgeLengths(
 	const Matrix2Xi &edges, 
 	const Matrix3Xi &triangles,
 	const unsigned int pointCount,
-	const IntPairToInt &edgeToEdgeIndex)
+	const IntPairToInt &edgeToEdgeIndex,
+	const IntToInts &edgeIndexToTriIndices)
 {
 	// xxx: do we need to place special consideration in boundary edges?
 	//		^ yes - need to exclude boundary vertices from equations - and use 0 in place of their contributions
@@ -134,6 +155,54 @@ void ShapeMorph::FlattenEdgeLengths(
 
 	const unsigned int triangleCount = triangles.cols();
 
+	// std::cout << "Generating coeff map.\n";
+	// our system of equations only consists of vertices not on the boundary
+	// (since the boundary vertices have their edgeContrib log values = 0
+	// so we need a mapping from vert index to an index to and equation coeff
+	unsigned int coeffCount = 0;
+	// a coeff index of -1 means the vertex is a boundary vertex
+	std::map<unsigned int, int> vertIndexToCoeffIndex;
+	std::map<unsigned int, unsigned int> coeffIndexToVertIndex;
+
+	// first we need to make a bool array telling us which vertices are boundary vertices
+	std::vector<bool> isBoundaryVertex(pointCount);
+
+	// xxx: is it already false? 
+	//      if not, is there a better way to intialize them all to false?
+	for (unsigned int vertIndex = 0; vertIndex < pointCount; vertIndex++)
+	{
+		isBoundaryVertex[vertIndex] = false;
+	}
+
+	for (unsigned int edgeIndex = 0; edgeIndex < edgeCount; edgeIndex++)
+	{
+		const unsigned int &vertIndexA = edges(0, edgeIndex);
+		const unsigned int &vertIndexB = edges(1, edgeIndex);
+
+		const unsigned int &adjTriangleCount = edgeIndexToTriIndices.find(edgeIndex)->second.size();
+			
+		// if there's only one triangle bordering this edge, then it's a boundary edge
+		isBoundaryVertex[vertIndexA] =
+			isBoundaryVertex[vertIndexA] || adjTriangleCount == 1;
+		isBoundaryVertex[vertIndexB] =
+			isBoundaryVertex[vertIndexB] || adjTriangleCount == 1;
+	}
+
+	for (unsigned int vertIndex = 0; vertIndex < pointCount; vertIndex++)
+	{
+		if (!isBoundaryVertex[vertIndex])
+		{
+			vertIndexToCoeffIndex[vertIndex] = coeffCount;
+			coeffIndexToVertIndex[coeffCount] = vertIndex;
+			coeffCount++;
+		}
+		else
+		{
+			vertIndexToCoeffIndex[vertIndex] = -1;
+		}
+	}
+	
+
 	// this is the "u" vector found in the CETM and BDMORPH papers
 	// i.e. each coefficient is some logmarithmic contribution 
 	//      to the lengths of edges incident to the given vertex
@@ -141,13 +210,13 @@ void ShapeMorph::FlattenEdgeLengths(
 	VectorXf vertexEdgeContribs = VectorXf::Ones(pointCount);
 	
 	int maxIterationCount = 100;
-
+	
 	// Newton step:
 	for (int iteration = 0; iteration < maxIterationCount; iteration++)
 	{
 		// 1. Generate Energy Gradient
 		std::cout << "\t1. Generate energy gradient.\n";
-		VectorXf energyGradient = VectorXf::Zero(pointCount);
+		VectorXf energyGradient = VectorXf::Zero(coeffCount);
 
 		VectorXf vertexAngles = VectorXf::Zero(pointCount);
 		Matrix3Xf triangleAngles = Matrix3Xf::Zero(3, triangleCount);
@@ -209,19 +278,26 @@ void ShapeMorph::FlattenEdgeLengths(
 
 		assert(!vertexAngles.hasNaN());
 
-		for (unsigned int vertIndex = 0; vertIndex < pointCount; vertIndex++)
+		//for (unsigned int vertIndex = 0; vertIndex < pointCount; vertIndex++)
+		//{
+		//	// the gaussian curvature at a vertex may considered 
+		//	// to be 2PI minus the sum of interior angles of incident triangles
+
+		//	// since we want to "flatten" the mesh, the desired curvature should be 0
+		//	// so our desiredAngleSum at each vertex is then 2PI, or PI for boundary vertices
+
+		//	// 0.5 * (desiredAngleSum - angleSum)
+		//	energyGradient[vertIndex] = 0.5 * (2 * M_PI - vertexAngles[vertIndex]);
+
+		//	assert(!std::isnan(energyGradient[vertIndex]) && std::isfinite(energyGradient[vertIndex]));
+		//	// XXX: boundary vertices?
+		//}
+		for (unsigned int coeffIndex = 0; coeffIndex < coeffCount; coeffIndex++)
 		{
-			// the gaussian curvature at a vertex may considered 
-			// to be 2PI minus the sum of interior angles of incident triangles
+			const unsigned int &vertIndex = coeffIndexToVertIndex[coeffIndex];
 
-			// since we want to "flatten" the mesh, the desired curvature should be 0
-			// so our desiredAngleSum at each vertex is then 2PI, or PI for boundary vertices
-
-			// 0.5 * (desiredAngleSum - angleSum)
-			energyGradient[vertIndex] = 0.5 * (2 * M_PI - vertexAngles[vertIndex]);
-
-			assert(!std::isnan(energyGradient[vertIndex]) && std::isfinite(energyGradient[vertIndex]));
-			// XXX: boundary vertices?
+			energyGradient[coeffIndex] = 0.5 * (2 * M_PI - vertexAngles[vertIndex]);
+			assert(!std::isnan(energyGradient[coeffIndex]) && std::isfinite(energyGradient[coeffIndex]));
 		}
 		
 		assert(!energyGradient.hasNaN());
@@ -233,7 +309,7 @@ void ShapeMorph::FlattenEdgeLengths(
 
 		// 2. Generate Energy Hessian
 		std::cout << "\t2. Generate energy hessian.\n";
-		SparseMatrix<float> energyHessian(pointCount, pointCount);
+		SparseMatrix<float> energyHessian(coeffCount, coeffCount);
 
 		// first we build a map of edge pairs to laplacian coefficients
 		// then convert those to triplets
@@ -246,9 +322,13 @@ void ShapeMorph::FlattenEdgeLengths(
 		{
 			const Vector3i &triangle = triangles.col(triIndex);
 
-			unsigned int vertIndexA = triangle[0];
-			unsigned int vertIndexB = triangle[1];
-			unsigned int vertIndexC = triangle[2];
+			const unsigned int &vertIndexA = triangle[0];
+			const unsigned int &vertIndexB = triangle[1];
+			const unsigned int &vertIndexC = triangle[2];
+
+			const unsigned int &coeffIndexA = vertIndexToCoeffIndex[vertIndexA];
+			const unsigned int &coeffIndexB = vertIndexToCoeffIndex[vertIndexB];
+			const unsigned int &coeffIndexC = vertIndexToCoeffIndex[vertIndexC];
 
 			const float &triangleAngleA = triangleAngles(0, triIndex);
 			const float &triangleAngleB = triangleAngles(1, triIndex);
@@ -258,18 +338,39 @@ void ShapeMorph::FlattenEdgeLengths(
 			const float quarterCotAngleB = 0.25 * Cot(triangleAngleB);
 			const float quarterCotAngleC = 0.25 * Cot(triangleAngleC);
 
-			halfLaplacianCoeffs[IntPair(vertIndexA, vertIndexB)] += -quarterCotAngleC;
-			halfLaplacianCoeffs[IntPair(vertIndexB, vertIndexA)] += -quarterCotAngleC;
 
-			halfLaplacianCoeffs[IntPair(vertIndexB, vertIndexC)] += -quarterCotAngleA;
-			halfLaplacianCoeffs[IntPair(vertIndexC, vertIndexB)] += -quarterCotAngleA;
+			if (coeffIndexA != -1 && coeffIndexB != -1)
+			{
+				halfLaplacianCoeffs[IntPair(coeffIndexA, coeffIndexB)] += -quarterCotAngleC;
+				halfLaplacianCoeffs[IntPair(coeffIndexB, coeffIndexA)] += -quarterCotAngleC;
+			}
 
-			halfLaplacianCoeffs[IntPair(vertIndexA, vertIndexC)] += -quarterCotAngleB;
-			halfLaplacianCoeffs[IntPair(vertIndexC, vertIndexA)] += -quarterCotAngleB;
+			if (coeffIndexB != -1 && coeffIndexC != -1)
+			{ 
+				halfLaplacianCoeffs[IntPair(coeffIndexB, coeffIndexC)] += -quarterCotAngleA;
+				halfLaplacianCoeffs[IntPair(coeffIndexC, coeffIndexB)] += -quarterCotAngleA;
+			}
 
-			halfLaplacianCoeffs[IntPair(vertIndexA, vertIndexA)] += quarterCotAngleB + quarterCotAngleC;
-			halfLaplacianCoeffs[IntPair(vertIndexB, vertIndexB)] += quarterCotAngleA + quarterCotAngleC;
-			halfLaplacianCoeffs[IntPair(vertIndexC, vertIndexC)] += quarterCotAngleA + quarterCotAngleB;
+			if (coeffIndexA != -1 && coeffIndexC != -1)
+			{
+				halfLaplacianCoeffs[IntPair(coeffIndexA, coeffIndexC)] += -quarterCotAngleB;
+				halfLaplacianCoeffs[IntPair(coeffIndexC, coeffIndexA)] += -quarterCotAngleB;
+			}
+
+			if (coeffIndexA != -1)
+			{   // xxx: does this make sense?
+				//      i.e. if vertex B isn't a coeff, 
+				//           should it still contribute to the diagonal here?
+				halfLaplacianCoeffs[IntPair(coeffIndexA, coeffIndexA)] += quarterCotAngleB + quarterCotAngleC;
+			}
+			if (coeffIndexB != -1)
+			{
+				halfLaplacianCoeffs[IntPair(coeffIndexB, coeffIndexB)] += quarterCotAngleA + quarterCotAngleC;
+			}
+			if (coeffIndexC != -1)
+			{
+				halfLaplacianCoeffs[IntPair(coeffIndexC, coeffIndexC)] += quarterCotAngleA + quarterCotAngleB;
+			}
 		}
 
 		typedef std::vector<Triplet<float>> V_Triplets;
@@ -316,10 +417,24 @@ void ShapeMorph::FlattenEdgeLengths(
 
 		for (unsigned int edgeIndex = 0; edgeIndex < edgeCount; edgeIndex++)
 		{
-			unsigned const int vertIndexA = edges(0, edgeIndex);
-			unsigned const int vertIndexB = edges(1, edgeIndex);
+			const unsigned int &vertIndexA = edges(0, edgeIndex);
+			const unsigned int &vertIndexB = edges(1, edgeIndex);
 
-			edgeLengths[edgeIndex] = edgeLengths[edgeIndex] * exp((deltaEdgeContrib[vertIndexA] + deltaEdgeContrib[vertIndexB]) / 2.f);
+			const unsigned int &coeffIndexA = vertIndexToCoeffIndex[vertIndexA];
+			const unsigned int &coeffIndexB = vertIndexToCoeffIndex[vertIndexB];
+
+			float deltaEdgeContribA = 0;
+			float deltaEdgeContribB = 0;
+			if (coeffIndexA != -1)
+			{
+				deltaEdgeContribA = deltaEdgeContrib[coeffIndexA];
+			}
+			if (coeffIndexB != -1)
+			{
+				deltaEdgeContribB = deltaEdgeContrib[coeffIndexB];
+			}
+
+			edgeLengths[edgeIndex] = edgeLengths[edgeIndex] * exp((deltaEdgeContribA + deltaEdgeContribB) / 2.f);
 			
 			assert(edgeLengths[edgeIndex] != 0 && std::isfinite(edgeLengths[edgeIndex]));
 		}
@@ -338,9 +453,10 @@ void ShapeMorph::EmbedMesh(
 	Matrix2Xf &points, 
 	const VectorXf &edgeLengths, 
 	const Matrix3Xi &triangles,
-	const IntPairToInt &edgeToEdgeIndex)
+	const IntPairToInt &edgeToEdgeIndex,
+	const IntToInts &edgeIndexToTriIndices)
 {
-	std::cout << "embedding\n";
+	// std::cout << "embedding\n";
 	// 1. choose a point and direction
 
 	// 2. while set of neighboring triangles is not empty:
@@ -352,30 +468,11 @@ void ShapeMorph::EmbedMesh(
 
 	const int triangleCount = triangles.cols();
 
-	// generate a map of edge indices to vector of triangle indices
-	std::cout << "\tMake edge to triangle map.\n";
-	std::map<unsigned int, std::vector<unsigned int>> edgeIndexToTriIndices;
-
-	for (unsigned int triIndex = 0; triIndex < triangleCount; triIndex++)
-	{
-		const Vector3i &triangle = triangles.col(triIndex);
-		for (unsigned int innerEdgeIndex = 0; innerEdgeIndex < 3; innerEdgeIndex++)
-		{
-			IntPair edge(triangle[innerEdgeIndex], triangle[(innerEdgeIndex+1) % 3]);
-
-			assert(edgeToEdgeIndex.find(edge) != edgeToEdgeIndex.end());
-
-			const unsigned int edgeIndex = edgeToEdgeIndex.find(edge)->second;
-
-			edgeIndexToTriIndices[edgeIndex].push_back(triIndex);
-		}
-	}
-
 	std::set<unsigned int> visitedTriIndices;
 	std::queue<unsigned int> triIndexQueue;
 
 	// embed the first triangle;
-	std::cout << "\tEmbed first triangle.\n";
+	// std::cout << "\tEmbed first triangle.\n";
 	{
 		const Vector3i &triangle = triangles.col(0);
 		
@@ -407,7 +504,8 @@ void ShapeMorph::EmbedMesh(
 		unsigned int edgeIndices[] = { edgeIndexA , edgeIndexB, edgeIndexC };
 		for (unsigned int innerEdgeIndex = 0; innerEdgeIndex < 3; innerEdgeIndex++)
 		{
-			for (auto &triIndex : edgeIndexToTriIndices[edgeIndices[innerEdgeIndex]])
+			assert(edgeIndexToTriIndices.find(edgeIndices[innerEdgeIndex]) != edgeIndexToTriIndices.end());
+			for (auto &triIndex : edgeIndexToTriIndices.find(edgeIndices[innerEdgeIndex])->second)
 			{
 				if (visitedTriIndices.find(triIndex) == visitedTriIndices.end())
 				{
@@ -426,7 +524,8 @@ void ShapeMorph::EmbedMesh(
 
 		const Vector3i &triangle = triangles.col(triIndex);
 
-		std::cout << "\tAdd neighboring triangles.\n";
+		// std::cout << "\tAdd neighboring triangles.\n";
+		
 		{
 			const unsigned int &vertIndexA = triangle[0];
 			const unsigned int &vertIndexB = triangle[1];
@@ -440,7 +539,8 @@ void ShapeMorph::EmbedMesh(
 			unsigned int edgeIndices[] = { edgeIndexA , edgeIndexB, edgeIndexC };
 			for (unsigned int innerEdgeIndex = 0; innerEdgeIndex < 3; innerEdgeIndex++)
 			{
-				for (auto &otherTriIndex : edgeIndexToTriIndices[edgeIndices[innerEdgeIndex]])
+				assert(edgeIndexToTriIndices.find(edgeIndices[innerEdgeIndex]) != edgeIndexToTriIndices.end());
+				for (auto &otherTriIndex : edgeIndexToTriIndices.find(edgeIndices[innerEdgeIndex])->second)
 				{
 					if (visitedTriIndices.find(otherTriIndex) == visitedTriIndices.end())
 					{
@@ -456,7 +556,7 @@ void ShapeMorph::EmbedMesh(
 		//  xxx: should we be checking that this implicitly determined 
 		//       edge satisfies the given edge length?)
 
-		std::cout << "\tFind undetermined vertex.\n";
+		// std::cout << "\tFind undetermined vertex.\n";
 		unsigned int undetInnerVertIndex = 4;
 
 		for (unsigned int innerVertIndex = 0; innerVertIndex < 3; innerVertIndex++)
@@ -504,7 +604,7 @@ void ShapeMorph::EmbedMesh(
 		unsigned int adjVertIndexA, adjVertIndexB;
 
 		// determine already defined bordering triangle
-		std::cout << "\tFind bordering triangle.\n";
+		// std::cout << "\tFind bordering triangle.\n";
 		for (unsigned int innerEdgeIndex = 0; innerEdgeIndex < 3; innerEdgeIndex++)
 		{
 			const unsigned int vertIndexA = triangle[innerEdgeIndex];
@@ -550,7 +650,7 @@ void ShapeMorph::EmbedMesh(
 		const Vector3i &adjTriangle = triangles.col(adjTriIndex);
 
 
-		std::cout << "\tDetermine opp. vertex.\n";
+		// std::cout << "\tDetermine opp. vertex.\n";
 		unsigned int oppVertIndex;
 		{	// determine the index of the vertex on the bordering triangle 
 			// that isn't shared with the current triangle
@@ -592,9 +692,12 @@ void ShapeMorph::EmbedMesh(
 		// so localY would be the distance from the point to edgeC
 		// and localX would be the distance from adjVertA to point projected onto edgeC
 
-		std::cout << "\tCalculate x,y.\n";
+		//std::cout << "\tCalculate x,y.\n";
 		float localX = (Sq(edgeLengthB) + Sq(edgeLengthC) - Sq(edgeLengthA)) / (2 * edgeLengthC);
 		float localY = sqrt(Sq(edgeLengthB) - Sq(localX));
+
+		assert(!std::isnan(localX) && std::isfinite(localX));
+		assert(!std::isnan(localY) && std::isfinite(localY));
 
 		const Vector2f &adjVertA = points.col(adjVertIndexA);
 		const Vector2f &adjVertB = points.col(adjVertIndexB);
@@ -602,14 +705,14 @@ void ShapeMorph::EmbedMesh(
 
 		Vector2f edgeCDir = points.col(adjVertIndexB) - points.col(adjVertIndexA);
 		edgeCDir.normalize();
-		
+
 		Vector2f edgeCPerpDir(-edgeCDir[1], edgeCDir[0]);
 
 		Vector2f edgePoint = points.col(adjVertIndexA) + edgeCDir * localX;
 
 		Vector2f vert = edgePoint + edgeCPerpDir * localY;
 
-		std::cout << "\tFix y orientation.\n";
+		// std::cout << "\tFix y orientation.\n";
 		{	// make sure this triangle doesn't overlap the bordering triangle
 
 			// xxx: there has gotta be a cleaner way to do this
@@ -630,7 +733,7 @@ void ShapeMorph::EmbedMesh(
 
 			if (triOrientation.dot(oppTriOrientation) > 0)
 			{	// orientations are same sign -> therefore are vert is on the wrong side
-				std::cout << "\tflip\n";
+				// std::cout << "\tflip\n";
 				vert = edgePoint - edgeCPerpDir * localY;
 			}
 		}
@@ -640,6 +743,7 @@ void ShapeMorph::EmbedMesh(
 		assert(std::isfinite(vert[0]) && std::isfinite(vert[1]));
 	}
 
+	std::cout << "Points\n======\n";
 	std::cout << points << "\n\n";
 
 	assert(visitedTriIndices.size() == triangleCount);

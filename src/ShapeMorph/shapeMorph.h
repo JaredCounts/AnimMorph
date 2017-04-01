@@ -15,18 +15,21 @@ private:
 
 	typedef std::map< IntPair, unsigned int> IntPairToInt;
 
+	typedef std::map<unsigned int, std::vector<unsigned int>> IntToInts;
+	
 	static void FlattenEdgeLengths(
 		VectorXf &edgeLengths,
 		const VectorXf &edgeLengthsOriginal,
 		const Matrix2Xi &edges,
 		const Matrix3Xi &triangles,
 		const unsigned int pointCount,
-		const IntPairToInt &edgeToEdgeIndex);
+		const IntPairToInt &edgeToEdgeIndex,
+		const IntToInts &edgeIndexToTriIndices);
 
 	static void EmbedMesh(
 		Matrix2Xf &points,
 		const VectorXf &edgeLengths,
 		const Matrix3Xi &triangles,
-		const IntPairToInt &edgeToEdgeIndex);
-
+		const IntPairToInt &edgeToEdgeIndex,
+		const IntToInts &edgeIndexToTriIndices);
 };

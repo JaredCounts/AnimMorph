@@ -83,7 +83,11 @@ int main(int argc, char** argv)
 	
 	mesh2.Translate(Vector2f(0, -5));
 
+	float t = 0;
+
 	Mesh2D mesh3 = ShapeMorph::Interpolate(mesh, mesh2, 0.5);
+
+	mesh3.Translate(Vector2f(-5, 0));
 
 	camera->SetDimensions(width, height);
 	camera->SetDistance(5);
@@ -170,6 +174,9 @@ int main(int argc, char** argv)
 		renderer->Clear();
 		renderer->Render(mesh);
 		renderer->Render(mesh2);
+
+		t += 0.01;
+		mesh3 = ShapeMorph::Interpolate(mesh, mesh2, t);
 		renderer->Render(mesh3);
 
 		glfwSwapBuffers(window);

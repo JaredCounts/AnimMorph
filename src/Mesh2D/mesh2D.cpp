@@ -30,14 +30,6 @@ void Mesh2D::AddPoint(const Vector2f point)
 	points.col(points.cols() - 1) = point;
 }
 
-//void Mesh2D::AddPoints(const V_Vector2f points)
-//{
-//	for (auto &point : points)
-//	{
-//		AddPoint(point);
-//	}
-//}
-
 void Mesh2D::AddTriangle(const Vector3i indices)
 {
 	// triangle indices must already be in mesh
@@ -56,7 +48,7 @@ void Mesh2D::SetPoint(const unsigned int index, const Vector2f point)
 	points.col(index) = point;
 }
 
-void Mesh2D::Translate(const Vector2f & offset)
+void Mesh2D::Translate(const Vector2f &offset)
 {
 	transform.translation() += offset;
 }

@@ -20,7 +20,7 @@ Mesh2D ShapeMorph::Interpolate(
 	assert((start.GetTriangles() - end.GetTriangles()).norm() == 0);
 
 	// 1. generate new edge lengths
-	// std::cout << "1. generating new edge lengths.\n";
+	std::cout << "1. generating new edge lengths.\n";
 	const Matrix2Xf startPoints = start.GetPoints_Local();
 	const Matrix2Xf endPoints = end.GetPoints_Local();
 
@@ -57,14 +57,14 @@ Mesh2D ShapeMorph::Interpolate(
 	const unsigned int triangleCount = triangles.cols();
 
 	// 2. flatten mesh using Conformal Equivalence of Triangle Mesh
-	// std::cout << "2. flattening mesh.\n";
+	std::cout << "2. flattening mesh.\n";
 	FlattenEdgeLengths(interpEdgeLengths, edgeLengthsCopy, edges, triangles, pointCount, meshHelper);
 	
 	// std::cout << "Edge Lengths.\n============\n";
 	// std::cout << interpEdgeLengths << '\n';
 
 	// 3. Embed mesh into 2D Euclidean space
-	// std::cout << "3. embedding mesh.\n";
+	std::cout << "3. embedding mesh.\n";
 	Matrix2Xf points = Matrix2Xf::Zero(2, pointCount);
 	EmbedMesh(points, interpEdgeLengths, triangles, edges, meshHelper);
 
@@ -226,7 +226,8 @@ void ShapeMorph::FlattenEdgeLengths(
 			// to be 2PI minus the sum of interior angles of incident triangles
 
 			// since we want to "flatten" the mesh, the desired curvature should be 0
-			// so our desiredAngleSum at each vertex is then 2PI, or PI for boundary vertices
+			// so our desiredAngleSum at each vertex is then 2PI
+			// (for boundary vertices, it would be PI - but they are not included in our system of equations)
 
 			// 0.5 * (desiredAngleSum - angleSum)
 			const unsigned int &vertIndex = coeffIndexToVertIndex[coeffIndex];
@@ -236,9 +237,10 @@ void ShapeMorph::FlattenEdgeLengths(
 		}
 		
 		assert(!energyGradient.hasNaN());
-
+		std::cout << "\tEnergy squared norm: " << energyGradient.squaredNorm() << "\n";
 		if (energyGradient.squaredNorm() < Sq(0.00001))
 		{	// stopping condition
+			std::cout << "\ttook " << iteration << " iterations\n.";
 			return;
 		}
 
@@ -336,19 +338,24 @@ void ShapeMorph::FlattenEdgeLengths(
 		// solver.analyzePattern(A);
 		// solver.factorize(energyHessian);
 
-		std::cout << "Energy Hessian\n==============\n" << energyHessian << "\n\n";
-		std::cout << "Energy Gradient\n===============\n[" << energyGradient.norm() << "]\n" << energyGradient << "\n\n";
+		// std::cout << "Energy Hessian\n==============\n" << energyHessian << "\n\n";
+		// std::cout << "Energy Gradient\n===============\n[" << energyGradient.norm() << "]\n" << energyGradient << "\n\n";
+		
+		// std::cout << "compute\n";
 		solver.compute(energyHessian);
 		assert(solver.info() == Success);
 
-		VectorXf deltaEdgeContrib  = solver.solve(-0.25 * energyGradient);
+		//std::cout << "solve\n";
+		VectorXf deltaEdgeContrib  = solver.solve(-1 * energyGradient);
 		assert(solver.info() == Success);
 
 		// center the deltaEdgeContrib values since the problem is scale invariant
-		float average = deltaEdgeContrib.sum() / deltaEdgeContrib.size();
-		deltaEdgeContrib = deltaEdgeContrib - average * VectorXf::Ones(pointCount);
+		// xxx - this isn't needed, apparently?
+		//std::cout << "center\n";
+		// float average = deltaEdgeContrib.sum() / deltaEdgeContrib.size();
+		// deltaEdgeContrib = deltaEdgeContrib - average * VectorXf::Ones(coeffCount);
 
-		std::cout << "Delta Edge\n==========\n" << deltaEdgeContrib << "\n\n";
+		//std::cout << "Delta Edge\n==========\n" << deltaEdgeContrib << "\n\n";
 
 		for (unsigned int edgeIndex = 0; edgeIndex < edgeCount; edgeIndex++)
 		{
@@ -374,10 +381,12 @@ void ShapeMorph::FlattenEdgeLengths(
 			assert(edgeLengths[edgeIndex] != 0 && std::isfinite(edgeLengths[edgeIndex]));
 		}
 
-		if (deltaEdgeContrib.squaredNorm() < 0.0001)
-		{
-			return;
-		}
+		//if (deltaEdgeContrib.squaredNorm() < 0.00001)
+		//{
+		//	std::cout << "\ttook " << (iteration+1) << " iterations\n.";
+		//	// std::cout << "Energy Gradient\n===============\n[" << energyGradient.norm() << "]\n" << energyGradient << "\n\n";
+		//	return;
+		//}
 	}
 
 	// xxx: failure!!
@@ -403,15 +412,21 @@ void ShapeMorph::EmbedMesh(
 
 	const int triangleCount = triangles.cols();
 
+	// triangles that have been determined
 	std::set<unsigned int> visitedTriIndices;
+	// triangles that have been added to the triIndexQueue
+	std::set<unsigned int> discoveredTriIndices;
+	// triangles that are ready to be determined
+	//     i.e. they already have two neighbors with determined vertices
 	std::queue<unsigned int> triIndexQueue;
 
 	// embed the first triangle;
-	// std::cout << "\tEmbed first triangle.\n";
+	std::cout << "\tEmbed first triangle.\n";
 	{
 		const Vector3i &triangle = triangles.col(0);
 		
 		visitedTriIndices.insert(0);
+		discoveredTriIndices.emplace(0);
 
 		const unsigned int &vertIndexA = triangle[0];
 		const unsigned int &vertIndexB = triangle[1];
@@ -439,6 +454,7 @@ void ShapeMorph::EmbedMesh(
 			assert(visitedTriIndices.find(triIndex) == visitedTriIndices.end());
 
 			triIndexQueue.push(triIndex);
+			discoveredTriIndices.emplace(triIndex);
 		}
 	}
 
@@ -457,9 +473,10 @@ void ShapeMorph::EmbedMesh(
 		{
 			// the only tri index in the visited set is tri index 0
 			// and that should not pop up in its adjacency vector
-			if (visitedTriIndices.find(adjTriIndex) == visitedTriIndices.end())
+			if (discoveredTriIndices.find(adjTriIndex) == discoveredTriIndices.end())
 			{
 				triIndexQueue.push(adjTriIndex);
+				discoveredTriIndices.emplace(adjTriIndex);
 			}
 		}
 

@@ -50,66 +50,90 @@ int main(int argc, char** argv)
 	cout << "GL_SHADING_LANGUAGE_VERSION : " << glGetString(GL_SHADING_LANGUAGE_VERSION) << endl;
 
 	Mesh2D mesh;
-	int trussWidth = 30;
-	float trussHeight = 3;
-	for (unsigned int i = 0; i < trussWidth; i++)
+	int trussWidth = 40;
+	float trussHeight = 15;
+	for (unsigned int j = 0; j < trussHeight; j++)
 	{
-		float x = i;
-		float y = 0.f;
-		mesh.AddPoint(Vector2f(x, y));
-		mesh.AddPoint(Vector2f(x, y + trussHeight));
-	}
-	for (unsigned int i = 0; i < trussWidth - 1; i++)
-	{
-		int j = i * 2;
-		mesh.AddTriangle(Vector3i(j, j + 1, j + 2));
-		mesh.AddTriangle(Vector3i(j + 1, j + 3, j + 2));
+		for (unsigned int i = 0; i < trussWidth; i++)
+		{
+			mesh.AddPoint(Vector2f(i, j));
+		}
 	}
 
+	auto GetIndex = [trussWidth](int i, int j) {
+		return i + j * trussWidth;
+	};
+	for (unsigned int i = 0; i < trussWidth - 1; i++)
+	{
+		for (unsigned int j = 0; j < trussHeight - 1; j++)
+		{
+			// make a square with (i,j), (i+1, j), (i+1,j+1), (i, j+1)
+			int a = GetIndex(i, j);
+			int b = GetIndex(i, j + 1);
+			int c = GetIndex(i + 1, j + 1);
+			int d = GetIndex(i + 1, j);
+			mesh.AddTriangle(Vector3i(a, b, d));
+			mesh.AddTriangle(Vector3i(b, c, d));
+		}
+	}
+	
 
 	// copy mesh
 	Mesh2D mesh2(mesh);
 	float angleStepSize = (2 * M_PI) / (trussWidth - 1);
 	float radius = trussWidth / (2 * M_PI);
-	for (unsigned int i = 0; i < trussWidth; i++)
+	for (int i = 0; i < trussWidth; i++)
 	{
-		float angle = i * angleStepSize;
-		float x = radius * cos(angle);
-		float y = radius * sin(angle);
-		mesh2.SetPoint(i*2, Vector2f(x, y));
+		for (int j = 0; j < trussHeight; j++)
+		{
+			int index = GetIndex(i, j);
 
-		x = (radius + trussHeight) * cos(angle);
-		y = (radius + trussHeight) * sin(angle);
-		mesh2.SetPoint(i*2 + 1, Vector2f(x, y));
+			float angle = i * angleStepSize;
+			float x = (radius + j) * cos(angle);
+			float y = (radius + j) * sin(angle);
+			mesh2.SetPoint(index, Vector2f(x, y));
+		}
 	}
+	//for (unsigned int i = 0; i < trussWidth; i++)
+	//{
+	//	float angle = i * angleStepSize;
+	//	float x = radius * cos(angle);
+	//	float y = radius * sin(angle);
+	//	mesh2.SetPoint(i*2, Vector2f(x, y));
 
-	Mesh2D mesh3(mesh);
-	angleStepSize = 4 * (2 * M_PI) / (trussWidth - 1);
-	radius = trussHeight;
-	for (unsigned int i = 0; i < trussWidth; i++)
-	{
-		float angle = i * angleStepSize;
-		float x = i;
-		float y = radius * sin(angle);
-		mesh3.SetPoint(i * 2, Vector2f(x, y));
+	//	x = (radius + trussHeight) * cos(angle);
+	//	y = (radius + trussHeight) * sin(angle);
+	//	mesh2.SetPoint(i*2 + 1, Vector2f(x, y));
+	//}
 
-		x = i;
-		y = radius * sin(angle) + trussHeight;
-		mesh3.SetPoint(i * 2 + 1, Vector2f(x, y));
-	}
+	//Mesh2D mesh3(mesh);
+	//angleStepSize = 4 * (2 * M_PI) / (trussWidth - 1);
+	//radius = trussHeight;
+	//for (unsigned int i = 0; i < trussWidth; i++)
+	//{
+	//	float angle = i * angleStepSize;
+	//	float x = i;
+	//	float y = radius * sin(angle);
+	//	mesh3.SetPoint(i * 2, Vector2f(x, y));
+
+	//	x = i;
+	//	y = radius * sin(angle) + trussHeight;
+	//	mesh3.SetPoint(i * 2 + 1, Vector2f(x, y));
+	//}
 
 	float spacing = 50;
 	mesh.Translate(Vector2f(0, 0));
 	mesh2.Translate(Vector2f(50, 50));
 
 	std::vector<Mesh2D> interpMeshes;
+	std::cout << "compute mesh helper\n";
 	MeshHelper meshHelper(mesh);
-	for (int i = 0; i < 24; i++)
+	for (int i = 0; i < 12; i++)
 	{
-		float t = i * (1.0 / 23);
-		interpMeshes.push_back(ShapeMorph::Interpolate(mesh2, mesh3, t, meshHelper));
+		float t = i * (1.0 / 11);
+		interpMeshes.push_back(ShapeMorph::Interpolate(mesh, mesh2, t, meshHelper));
 		
-		interpMeshes.back().Translate(spacing * Vector2f(i % 6, -(i / 6)));
+		interpMeshes.back().Translate(spacing * Vector2f(i % 3, -(i / 3)));
 	}
 
 	camera->SetDimensions(width, height);
@@ -201,6 +225,7 @@ int main(int argc, char** argv)
 		{
 			renderer->Render(mesh);
 		}
+		
 		//renderer->Render(mesh);
 		//renderer->Render(mesh2);
 		// renderer->Render(mesh3);

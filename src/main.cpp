@@ -15,6 +15,7 @@ using namespace std;
 #include "ShapeMorph\shapeMorph.h"
 
 #include "Interpolation\linear.h"
+#include "Interpolation\naturalCubicSpline.h"
 
 MouseManager mouseManager;
 
@@ -51,14 +52,14 @@ int main(int argc, char** argv)
 	cout << "GL_RENDERER                 : " << glGetString(GL_RENDERER) << endl;
 	cout << "GL_SHADING_LANGUAGE_VERSION : " << glGetString(GL_SHADING_LANGUAGE_VERSION) << endl;
 
-	Mesh2D mesh;
+	P_Mesh2D mesh(new Mesh2D());
 	int trussWidth = 50;
 	float trussHeight = 5;
 	for (unsigned int j = 0; j < trussHeight; j++)
 	{
 		for (unsigned int i = 0; i < trussWidth; i++)
 		{
-			mesh.AddPoint(Vector2f(i, j));
+			mesh->AddPoint(Vector2f(i, j));
 		}
 	}
 
@@ -74,14 +75,14 @@ int main(int argc, char** argv)
 			int b = GetIndex(i, j + 1);
 			int c = GetIndex(i + 1, j + 1);
 			int d = GetIndex(i + 1, j);
-			mesh.AddTriangle(Vector3i(a, b, d));
-			mesh.AddTriangle(Vector3i(b, c, d));
+			mesh->AddTriangle(Vector3i(a, b, d));
+			mesh->AddTriangle(Vector3i(b, c, d));
 		}
 	}
 	
 
 	// copy mesh
-	Mesh2D mesh2(mesh);
+	P_Mesh2D mesh2(new Mesh2D(*mesh));
 	float angleStepSize = (2 * M_PI) / (trussWidth - 1);
 	float radius = trussWidth / (2 * M_PI);
 	for (int i = 0; i < trussWidth; i++)
@@ -93,24 +94,13 @@ int main(int argc, char** argv)
 			float angle = i * angleStepSize;
 			float x = (radius + j) * cos(angle);
 			float y = (radius + j) * sin(angle);
-			mesh2.SetPoint(index, Vector2f(x, y));
+			mesh2->SetPoint(index, Vector2f(x, y));
 		}
 	}
-	//for (unsigned int i = 0; i < trussWidth; i++)
-	//{
-	//	float angle = i * angleStepSize;
-	//	float x = radius * cos(angle);
-	//	float y = radius * sin(angle);
-	//	mesh2.SetPoint(i*2, Vector2f(x, y));
 
-	//	x = (radius + trussHeight) * cos(angle);
-	//	y = (radius + trussHeight) * sin(angle);
-	//	mesh2.SetPoint(i*2 + 1, Vector2f(x, y));
-	//}
-
-	Mesh2D mesh3(mesh);
+	P_Mesh2D mesh3(new Mesh2D(*mesh));
 	angleStepSize = 4 * (2 * M_PI) / (trussWidth - 1);
-	radius = trussHeight;
+	radius = 0.5 * trussHeight;
 	for (int i = 0; i < trussWidth; i++)
 	{
 		for (int j = 0; j < trussHeight; j++)
@@ -120,37 +110,50 @@ int main(int argc, char** argv)
 			float angle = i * angleStepSize;
 			float x = i;
 			float y = radius * sin(angle) + j;
-			mesh3.SetPoint(index, Vector2f(x, y));
+			mesh3->SetPoint(index, Vector2f(x, y));
 		}
 	}
-	//angleStepSize = 4 * (2 * M_PI) / (trussWidth - 1);
-	//radius = trussHeight;
-	//for (unsigned int i = 0; i < trussWidth; i++)
-	//{
-	//	float angle = i * angleStepSize;
-	//	float x = i;
-	//	float y = radius * sin(angle);
-	//	mesh3.SetPoint(i * 2, Vector2f(x, y));
 
-	//	x = i;
-	//	y = radius * sin(angle) + trussHeight;
-	//	mesh3.SetPoint(i * 2 + 1, Vector2f(x, y));
-	//}
+	float spacing = 100;
+	mesh->Translate(Vector2f(0, 0));
+	mesh2->Translate(Vector2f(0, 50));
+	mesh3->Translate(Vector2f(0, 100));
 
-	float spacing = 50;
-	mesh.Translate(Vector2f(0, 0));
-	mesh2.Translate(Vector2f(0, 50));
-	mesh3.Translate(Vector2f(0, 100));
-
-	std::vector<Mesh2D> interpMeshes;
 	std::cout << "compute mesh helper\n";
 	MeshHelper meshHelper(mesh);
-	for (int i = 0; i < 12; i++)
+
+	P_Mesh2Ds meshes;
+	meshes.push_back(mesh);
+	meshes.push_back(mesh2);
+	meshes.push_back(mesh3);
+	meshes.push_back(mesh);
+
+	P_Mesh2Ds interpMeshes;
+	int meshCount = 600;
+	for (int i = 0; i < meshCount; i++)
 	{
-		float t = i * (1.0 / 11);
-		interpMeshes.push_back(ShapeMorph::Interpolate(mesh, mesh2, t, meshHelper, Interpolation::Linear));
-		
-		interpMeshes.back().Translate(spacing * Vector2f(i % 3, -(i / 3)));
+		float t = (meshes.size()-1) * i * (1.0 / (meshCount - 1));
+		interpMeshes.push_back(
+			ShapeMorph::Interpolate(
+				meshes, 
+				t, 
+				meshHelper, 
+				Interpolation::CubicNaturalClosed));
+	}
+
+
+	P_Mesh2Ds interpMeshesLinear;
+	for (int i = 0; i < meshCount; i++)
+	{
+		float t = (meshes.size() - 1) * i * (1.0 / (meshCount - 1));
+		interpMeshesLinear.push_back(
+			ShapeMorph::Interpolate(
+				meshes, 
+				t,
+				meshHelper, 
+				Interpolation::LinearClosed));
+
+		interpMeshesLinear.back()->Translate(Vector2f(50, 0));
 	}
 
 	camera->SetDimensions(width, height);
@@ -231,21 +234,28 @@ int main(int argc, char** argv)
 
 	glfwSetWindowSizeCallback(window, windowResizeFunction);
 
+
+	int meshIndex = 0;
 	// Check if the ESC key was pressed or the window was closed
 	while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
 		glfwWindowShouldClose(window) == 0)
 	{
 		renderer->Clear();
 
+		renderer->Render(interpMeshes[meshIndex]);
+		meshIndex = (meshIndex + 1) % interpMeshes.size();
 
-		for (auto &mesh : interpMeshes)
-		{
-			renderer->Render(mesh);
-		}
+
+		renderer->Render(interpMeshesLinear[meshIndex]);
 		
-		renderer->Render(mesh);
-		renderer->Render(mesh2);
-		renderer->Render(mesh3);
+		//for (auto &mesh : interpMeshes)
+		//{
+		//	renderer->Render(mesh);
+		//}
+		
+		//renderer->Render(mesh);
+		//renderer->Render(mesh2);
+		//renderer->Render(mesh3);
 		////t += 0.01;
 		////mesh3 = ShapeMorph::Interpolate(mesh, mesh2, t);
 

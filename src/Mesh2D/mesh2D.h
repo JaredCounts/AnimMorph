@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "../linearAlgebra.h"
 
 class Mesh2D
@@ -24,7 +26,7 @@ public:
 	int PointCount() const;
 	int TriangleCount() const;
 
-	const Matrix2Xf GetPoints_World() const;
+	Matrix2Xf GetPoints_World() const;
 	const Matrix2Xf &GetPoints_Local() const;
 	const Matrix3Xi &GetTriangles() const;
 
@@ -44,3 +46,6 @@ private:
 	// basis
 	Transform2f transform;
 };
+
+typedef std::shared_ptr<Mesh2D> P_Mesh2D;
+typedef std::vector<P_Mesh2D> P_Mesh2Ds;

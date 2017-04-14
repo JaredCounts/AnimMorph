@@ -2,49 +2,65 @@
 
 #include <set>
 #include <queue>
+#include <algorithm>
 #include <iostream>
 
 #include <Eigen/Sparse>
 #include <Eigen/SparseCholesky>
 
-Mesh2D ShapeMorph::Interpolate(
-	const Mesh2D &start, 
-	const Mesh2D &end, 
+P_Mesh2D ShapeMorph::Interpolate(
+	const P_Mesh2Ds &meshes,
 	float t, 
 	const MeshHelper &meshHelper,
 	const InterpolateFunction &interpolateFunction)
 {
-	// t must be between 0 and 1
-	assert(0 <= t && t <= 1);
+	const unsigned int meshCount = meshes.size();
 
+	assert(meshCount > 0);
+
+	// t must be between 0 and mesh count
+	assert(0 <= t && t <= meshCount);
+
+	const P_Mesh2D &startMesh = meshes[0];
+
+	// topology is same, so the edge indices should be identical between both meshes
+	const Matrix3Xi &triangles = startMesh->GetTriangles();
+	const Matrix2Xi &edges = startMesh->GetEdges();
+
+	const unsigned int triangleCount = triangles.cols();
+	const unsigned int edgeCount = edges.cols();
+	const unsigned int pointCount = startMesh->PointCount();
+	
 	// matrices must be topologically the same
-	assert((start.GetTriangles() - end.GetTriangles()).norm() == 0);
+	for (auto &mesh : meshes)
+	{
+		assert(mesh->GetTriangles() == triangles);
+	}
 
 	// 1. generate new edge lengths
 	std::cout << "1. generating new edge lengths.\n";
-	const Matrix2Xf startPoints = start.GetPoints_Local();
-	const Matrix2Xf endPoints = end.GetPoints_Local();
-	// topology is same, so the edge indices should be identical between both meshes
-	const Matrix2Xi edges = start.GetEdges();
-
-	unsigned int edgeCount = edges.cols();
 
 	// row: edge index
 	// column: interpolation index
-	MatrixXf edgeLengthsSq(2, edgeCount);
+	MatrixXf edgeLengthsSq(meshCount, edgeCount);
 
-	for (unsigned int i = 0; i < edgeCount; i++)
+	for (unsigned int meshIndex = 0; meshIndex < meshCount; meshIndex++)
 	{
-		const unsigned int vertAIndex = edges(0, i);
-		const unsigned int vertBIndex = edges(1, i);
-		float startEdgeLengthSq = (startPoints.col(vertAIndex) - startPoints.col(vertBIndex)).squaredNorm();
-		float endEdgeLengthSq = (endPoints.col(vertAIndex) - endPoints.col(vertBIndex)).squaredNorm();
+		const P_Mesh2D &mesh = meshes[meshIndex];
+		const Matrix2Xf &points = mesh->GetPoints_Local();
 
-		assert(startEdgeLengthSq != 0);
-		assert(endEdgeLengthSq != 0);
+		for (unsigned int edgeIndex = 0; edgeIndex < edgeCount; edgeIndex++)
+		{
 
-		edgeLengthsSq(0, i) = startEdgeLengthSq;
-		edgeLengthsSq(1, i) = endEdgeLengthSq;
+			const unsigned int vertAIndex = edges(0, edgeIndex);
+			const unsigned int vertBIndex = edges(1, edgeIndex);
+
+			float edgeLengthSq = (points.col(vertAIndex) - points.col(vertBIndex)).squaredNorm();
+
+			assert(edgeLengthSq != 0);
+
+			edgeLengthsSq(meshIndex, edgeIndex) = edgeLengthSq;
+		}
 	}
 
 	VectorXf interpEdgeLengths = interpolateFunction(edgeLengthsSq, t);
@@ -61,12 +77,6 @@ Mesh2D ShapeMorph::Interpolate(
 
 	const VectorXf edgeLengthsCopy(interpEdgeLengths);
 
-	const Matrix3Xi &triangles = start.GetTriangles();
-
-	const unsigned int pointCount = start.PointCount();
-
-	const unsigned int triangleCount = triangles.cols();
-
 	// 2. flatten mesh using Conformal Equivalence of Triangle Mesh
 	std::cout << "2. flattening mesh.\n";
 	FlattenEdgeLengths(interpEdgeLengths, edgeLengthsCopy, edges, triangles, pointCount, meshHelper);
@@ -76,7 +86,7 @@ Mesh2D ShapeMorph::Interpolate(
 	Matrix2Xf points = Matrix2Xf::Zero(2, pointCount);
 	EmbedMesh(points, interpEdgeLengths, triangles, edges, meshHelper);
 
-	return Mesh2D(points, triangles);
+	return P_Mesh2D(new Mesh2D(points, triangles));
 }
 
 float Sq(const float &val)
@@ -389,12 +399,12 @@ void ShapeMorph::FlattenEdgeLengths(
 			assert(edgeLengths[edgeIndex] != 0 && std::isfinite(edgeLengths[edgeIndex]));
 		}
 
-		//if (deltaEdgeContrib.squaredNorm() < 0.00001)
-		//{
-		//	std::cout << "\ttook " << (iteration+1) << " iterations\n.";
-		//	// std::cout << "Energy Gradient\n===============\n[" << energyGradient.norm() << "]\n" << energyGradient << "\n\n";
-		//	return;
-		//}
+		if (deltaEdgeContrib.squaredNorm() < 0.00001)
+		{
+			std::cout << "\ttook " << (iteration+1) << " iterations\n.";
+			// std::cout << "Energy Gradient\n===============\n[" << energyGradient.norm() << "]\n" << energyGradient << "\n\n";
+			return;
+		}
 	}
 
 	// xxx: failure!!

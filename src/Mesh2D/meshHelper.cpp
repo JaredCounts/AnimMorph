@@ -1,14 +1,14 @@
 #include "meshHelper.h"
 
-MeshHelper::MeshHelper(const Mesh2D & mesh)
+MeshHelper::MeshHelper(const P_Mesh2D &mesh)
 {
-	const Matrix2Xi &edges = mesh.GetEdges();
+	const Matrix2Xi &edges = mesh->GetEdges();
 	const unsigned int edgeCount = edges.cols();
 
-	const Matrix3Xi &triangles = mesh.GetTriangles();
+	const Matrix3Xi &triangles = mesh->GetTriangles();
 	const unsigned int triCount = triangles.cols();
 
-	const unsigned int vertCount = mesh.PointCount();
+	const unsigned int vertCount = mesh->PointCount();
 
 	// std::map<unsigned int, unsigned int> edgeToEdgeIndex;
 	// ====

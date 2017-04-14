@@ -10,9 +10,9 @@ class ShapeMorph
 public:
 	typedef std::function<VectorXf(const MatrixXf&, float)> InterpolateFunction;
 
-	static Mesh2D Interpolate(
-		const Mesh2D& start, 
-		const Mesh2D& end, 
+
+	static P_Mesh2D Interpolate(
+		const P_Mesh2Ds &meshes,
 		float t,
 		const MeshHelper &meshHelper,
 		const InterpolateFunction &interpolateFunction);

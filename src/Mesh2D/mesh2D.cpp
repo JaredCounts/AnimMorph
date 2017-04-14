@@ -63,7 +63,7 @@ int Mesh2D::TriangleCount() const
 	return triangles.cols();
 }
 
-const Matrix2Xf Mesh2D::GetPoints_World() const
+Matrix2Xf Mesh2D::GetPoints_World() const
 { 
 	return transform * points;
 }

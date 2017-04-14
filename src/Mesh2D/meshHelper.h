@@ -12,7 +12,7 @@ Keeps assists with topological look-up stuff.
 class MeshHelper
 {
 public:
-	MeshHelper(const Mesh2D &mesh);
+	MeshHelper(const P_Mesh2D &mesh);
 
 	/*
 	vertIndexA: index of vertex A on edge

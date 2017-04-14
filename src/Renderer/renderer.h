@@ -19,7 +19,7 @@ public:
 
 	void Clear();
 
-	void Render(const Mesh2D &mesh);
+	void Render(const P_Mesh2D &mesh);
 
 private:
 	P_Camera camera;

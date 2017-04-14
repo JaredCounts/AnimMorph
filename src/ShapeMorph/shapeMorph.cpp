@@ -11,7 +11,8 @@ Mesh2D ShapeMorph::Interpolate(
 	const Mesh2D &start, 
 	const Mesh2D &end, 
 	float t, 
-	const MeshHelper &meshHelper)
+	const MeshHelper &meshHelper,
+	const InterpolateFunction &interpolateFunction)
 {
 	// t must be between 0 and 1
 	assert(0 <= t && t <= 1);
@@ -23,13 +24,14 @@ Mesh2D ShapeMorph::Interpolate(
 	std::cout << "1. generating new edge lengths.\n";
 	const Matrix2Xf startPoints = start.GetPoints_Local();
 	const Matrix2Xf endPoints = end.GetPoints_Local();
-
 	// topology is same, so the edge indices should be identical between both meshes
 	const Matrix2Xi edges = start.GetEdges();
 
 	unsigned int edgeCount = edges.cols();
 
-	VectorXf interpEdgeLengths(edgeCount);
+	// row: edge index
+	// column: interpolation index
+	MatrixXf edgeLengthsSq(2, edgeCount);
 
 	for (unsigned int i = 0; i < edgeCount; i++)
 	{
@@ -41,7 +43,16 @@ Mesh2D ShapeMorph::Interpolate(
 		assert(startEdgeLengthSq != 0);
 		assert(endEdgeLengthSq != 0);
 
-		interpEdgeLengths[i] = sqrt(abs((1 - t) * startEdgeLengthSq + t * endEdgeLengthSq));
+		edgeLengthsSq(0, i) = startEdgeLengthSq;
+		edgeLengthsSq(1, i) = endEdgeLengthSq;
+	}
+
+	VectorXf interpEdgeLengths = interpolateFunction(edgeLengthsSq, t);
+	assert(interpEdgeLengths.size() == edgeCount);
+
+	for (unsigned int i = 0; i < edgeCount; i++)
+	{
+		interpEdgeLengths[i] = sqrt(interpEdgeLengths[i]);
 
 		assert(interpEdgeLengths[i] != 0);
 		assert(!std::isnan(interpEdgeLengths[i]));
@@ -59,9 +70,6 @@ Mesh2D ShapeMorph::Interpolate(
 	// 2. flatten mesh using Conformal Equivalence of Triangle Mesh
 	std::cout << "2. flattening mesh.\n";
 	FlattenEdgeLengths(interpEdgeLengths, edgeLengthsCopy, edges, triangles, pointCount, meshHelper);
-	
-	// std::cout << "Edge Lengths.\n============\n";
-	// std::cout << interpEdgeLengths << '\n';
 
 	// 3. Embed mesh into 2D Euclidean space
 	std::cout << "3. embedding mesh.\n";

@@ -14,6 +14,8 @@ using namespace std;
 
 #include "ShapeMorph\shapeMorph.h"
 
+#include "Interpolation\linear.h"
+
 MouseManager mouseManager;
 
 P_Camera camera(new Camera());
@@ -50,8 +52,8 @@ int main(int argc, char** argv)
 	cout << "GL_SHADING_LANGUAGE_VERSION : " << glGetString(GL_SHADING_LANGUAGE_VERSION) << endl;
 
 	Mesh2D mesh;
-	int trussWidth = 40;
-	float trussHeight = 15;
+	int trussWidth = 50;
+	float trussHeight = 5;
 	for (unsigned int j = 0; j < trussHeight; j++)
 	{
 		for (unsigned int i = 0; i < trussWidth; i++)
@@ -106,7 +108,21 @@ int main(int argc, char** argv)
 	//	mesh2.SetPoint(i*2 + 1, Vector2f(x, y));
 	//}
 
-	//Mesh2D mesh3(mesh);
+	Mesh2D mesh3(mesh);
+	angleStepSize = 4 * (2 * M_PI) / (trussWidth - 1);
+	radius = trussHeight;
+	for (int i = 0; i < trussWidth; i++)
+	{
+		for (int j = 0; j < trussHeight; j++)
+		{
+			int index = GetIndex(i, j);
+
+			float angle = i * angleStepSize;
+			float x = i;
+			float y = radius * sin(angle) + j;
+			mesh3.SetPoint(index, Vector2f(x, y));
+		}
+	}
 	//angleStepSize = 4 * (2 * M_PI) / (trussWidth - 1);
 	//radius = trussHeight;
 	//for (unsigned int i = 0; i < trussWidth; i++)
@@ -123,7 +139,8 @@ int main(int argc, char** argv)
 
 	float spacing = 50;
 	mesh.Translate(Vector2f(0, 0));
-	mesh2.Translate(Vector2f(50, 50));
+	mesh2.Translate(Vector2f(0, 50));
+	mesh3.Translate(Vector2f(0, 100));
 
 	std::vector<Mesh2D> interpMeshes;
 	std::cout << "compute mesh helper\n";
@@ -131,7 +148,7 @@ int main(int argc, char** argv)
 	for (int i = 0; i < 12; i++)
 	{
 		float t = i * (1.0 / 11);
-		interpMeshes.push_back(ShapeMorph::Interpolate(mesh, mesh2, t, meshHelper));
+		interpMeshes.push_back(ShapeMorph::Interpolate(mesh, mesh2, t, meshHelper, Interpolation::Linear));
 		
 		interpMeshes.back().Translate(spacing * Vector2f(i % 3, -(i / 3)));
 	}
@@ -226,9 +243,9 @@ int main(int argc, char** argv)
 			renderer->Render(mesh);
 		}
 		
-		//renderer->Render(mesh);
-		//renderer->Render(mesh2);
-		// renderer->Render(mesh3);
+		renderer->Render(mesh);
+		renderer->Render(mesh2);
+		renderer->Render(mesh3);
 		////t += 0.01;
 		////mesh3 = ShapeMorph::Interpolate(mesh, mesh2, t);
 

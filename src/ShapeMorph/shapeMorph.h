@@ -8,14 +8,16 @@
 class ShapeMorph
 {
 public:
+	typedef std::function<VectorXf(const MatrixXf&, float)> InterpolateFunction;
+
 	static Mesh2D Interpolate(
 		const Mesh2D& start, 
 		const Mesh2D& end, 
 		float t,
-		const MeshHelper &meshHelper);
+		const MeshHelper &meshHelper,
+		const InterpolateFunction &interpolateFunction);
 
 private:
-
 	typedef std::pair<unsigned int, unsigned int> UIntPair;
 
 	static void FlattenEdgeLengths(

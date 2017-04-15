@@ -129,7 +129,7 @@ int main(int argc, char** argv)
 	meshes.push_back(mesh);
 
 	P_Mesh2Ds interpMeshes;
-	int meshCount = 600;
+	int meshCount = 60;
 	for (int i = 0; i < meshCount; i++)
 	{
 		float t = (meshes.size()-1) * i * (1.0 / (meshCount - 1));
@@ -138,7 +138,7 @@ int main(int argc, char** argv)
 				meshes, 
 				t, 
 				meshHelper, 
-				Interpolation::CubicNaturalClosed));
+				Interpolation::CubicNaturalSplineFunc(true)));
 	}
 
 
@@ -151,7 +151,7 @@ int main(int argc, char** argv)
 				meshes, 
 				t,
 				meshHelper, 
-				Interpolation::LinearClosed));
+				Interpolation::LinearFunc(true)));
 
 		interpMeshesLinear.back()->Translate(Vector2f(50, 0));
 	}

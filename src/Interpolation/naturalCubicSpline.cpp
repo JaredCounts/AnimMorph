@@ -82,7 +82,7 @@ namespace Interpolation
 		return secondDifferences;
 	}
 
-	float CubicNaturalScalarImpl(const VectorXf &values, float t, bool closed, LLT<MatrixXf> solver)
+	float CubicNaturalScalarImpl(const VectorXf &values, float t, bool closed, const LLT<MatrixXf> &solver)
 	{
 		int n = values.size();
 

@@ -9,8 +9,10 @@ struct pairhash {
 public:
 	template <typename T, typename U>
 	std::size_t operator()(const std::pair<T, U> &x) const
-
 	{
-		return std::hash<T>()(x.first) ^ (std::hash<U>()(x.second) + 0x9e3779b9);
+		size_t seed = 0;
+		seed ^= std::hash<T>()(x.first) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= std::hash<U>()(x.second) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		return seed;
 	}
 };

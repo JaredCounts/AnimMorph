@@ -9,6 +9,7 @@ namespace ShapeMorphImpl
 
 	void InterpolateEdgeLengths(
 		VectorXf &interpEdgeLengths,
+		const Matrix2Xi &edges,
 		const P_Mesh2Ds &meshes,
 		float t,
 		const Interpolation::InterpolationFunc &interpolateFunction

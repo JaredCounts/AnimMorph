@@ -18,6 +18,15 @@ public:
 	MeshHelper(const P_Mesh2D &mesh);
 
 	/*
+	Matrix of edges.
+
+	Each column corresponds to a separate edge,
+	with the first row = starting indices,
+			second row = ending indices.
+	*/
+	const Matrix2Xi &GetEdges() const;
+
+	/*
 	vertIndexA: index of vertex A on edge
 	vertIndexB: index of vertex B on edge
 
@@ -91,4 +100,6 @@ private:
 	// keyed by (vertIndex, edgeIndex) where edgeIndex is opposite to
 	// vert index on the vert's triangle.
 	std::unordered_map<UIntPair, unsigned int, pairhash> oppVertIndexFromVertIndexAndEdgeIndex;
+
+	Matrix2Xi edges;
 };

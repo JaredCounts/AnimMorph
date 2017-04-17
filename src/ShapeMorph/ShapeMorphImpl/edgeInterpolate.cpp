@@ -5,13 +5,11 @@ namespace ShapeMorphImpl
 
 	void InterpolateEdgeLengths(
 		VectorXf &interpEdgeLengths,
+		const Matrix2Xi &edges,
 		const P_Mesh2Ds &meshes,
 		float t,
 		const Interpolation::InterpolationFunc &interpolateFunction)
 	{
-		// topology is same, so the edge indices should be identical between both meshes
-		const Matrix2Xi &edges = meshes[0]->GetEdges();
-
 		const unsigned int edgeCount = edges.cols();
 
 		assert(interpEdgeLengths.size() == edgeCount);

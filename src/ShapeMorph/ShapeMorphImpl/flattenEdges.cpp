@@ -62,8 +62,8 @@ namespace ShapeMorphImpl
 		// so we need a mapping from vert index to an index to and equation coeff
 		unsigned int coeffCount = 0;
 		// a coeff index of -1 means the vertex is a boundary vertex
-		std::map<unsigned int, int> vertIndexToCoeffIndex;
-		std::map<unsigned int, unsigned int> coeffIndexToVertIndex;
+		std::unordered_map<unsigned int, int> vertIndexToCoeffIndex;
+		std::unordered_map<unsigned int, unsigned int> coeffIndexToVertIndex;
 
 		for (unsigned int vertIndex = 0; vertIndex < pointCount; vertIndex++)
 		{
@@ -183,7 +183,7 @@ namespace ShapeMorphImpl
 			// then convert those to triplets
 			// then load those into the sparse matrix (acc. to Eigen, this is the best way forward)
 
-			std::map<UIntPair, float> halfLaplacianCoeffs;
+			std::unordered_map<UIntPair, float, pairhash> halfLaplacianCoeffs;
 
 			// the energy Hessian is the same as 1/2 the cot-Laplacian of the mesh
 			for (unsigned int triIndex = 0; triIndex < triangleCount; triIndex++)
@@ -264,7 +264,8 @@ namespace ShapeMorphImpl
 			// i.e. flatEdgeLength = e^(u[i] + u[j]) * edgeLength
 			// so u = "vertexLogEdgeContribution"
 			//std::cout << "\t3. Update log edge contributions.\n";
-			SparseQR<SparseMatrix<float>, COLAMDOrdering<int>> solver;
+			//SparseQR<SparseMatrix<float>, COLAMDOrdering<int>> solver;
+			SimplicialLDLT<SparseMatrix<float>> solver;
 
 			// solver.analyzePattern(A);
 			// solver.factorize(energyHessian);

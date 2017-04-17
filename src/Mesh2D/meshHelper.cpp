@@ -1,14 +1,46 @@
 #include "meshHelper.h"
 
+#include <unordered_set>
+
 MeshHelper::MeshHelper(const P_Mesh2D &mesh)
 {
-	const Matrix2Xi &edges = mesh->GetEdges();
-	const unsigned int edgeCount = edges.cols();
 
 	const Matrix3Xi &triangles = mesh->GetTriangles();
 	const unsigned int triCount = triangles.cols();
 
 	const unsigned int vertCount = mesh->PointCount();
+
+	// edges
+	// ===
+
+	std::unordered_set<std::pair<unsigned int, unsigned int>, pairhash> edgeSet;
+
+	for (unsigned int i = 0; i < triCount; i++)
+	{
+		const Vector3i &triangle = triangles.col(i);
+		for (unsigned int j = 0; j < 3; j++)
+		{
+			std::pair<int, int> edge(triangle[j], triangle[(j + 1) % 3]);
+			std::pair<int, int> edgeReversed(edge.second, edge.first);
+
+			if (edgeSet.find(edge) == edgeSet.end()
+				&& edgeSet.find(edgeReversed) == edgeSet.end())
+			{
+				edgeSet.emplace(edge);
+			}
+		}
+	}
+
+	edges.conservativeResize(2, edgeSet.size());
+	unsigned int i = 0;
+	for (auto &edge : edgeSet)
+	{
+		edges.col(i) = Vector2i(edge.first, edge.second);
+		i += 1;
+	}
+
+	const unsigned int edgeCount = edges.cols();
+
 
 	// std::unordered_map<unsigned int, unsigned int> edgeToEdgeIndex;
 	// ====
@@ -149,6 +181,11 @@ MeshHelper::MeshHelper(const P_Mesh2D &mesh)
 		oppVertIndexFromVertIndexAndEdgeIndex[UIntPair(vertIndexC1, edgeIndex)] = vertIndexC2;
 		oppVertIndexFromVertIndexAndEdgeIndex[UIntPair(vertIndexC2, edgeIndex)] = vertIndexC1;
 	}
+}
+
+const Matrix2Xi & MeshHelper::GetEdges() const
+{
+	return edges;
 }
 
 unsigned int MeshHelper::EdgeToEdgeIndex(unsigned int vertIndexA, unsigned int vertIndexB) const

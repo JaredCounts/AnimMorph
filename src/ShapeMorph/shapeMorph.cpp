@@ -26,7 +26,7 @@ namespace ShapeMorph
 
 		// topology is same, so the edge indices should be identical between both meshes
 		const Matrix3Xi &triangles = startMesh->GetTriangles();
-		const Matrix2Xi &edges = startMesh->GetEdges();
+		const Matrix2Xi &edges = meshHelper.GetEdges();
 
 		const unsigned int edgeCount = edges.cols();
 		const unsigned int pointCount = startMesh->PointCount();
@@ -43,6 +43,7 @@ namespace ShapeMorph
 		VectorXf interpEdgeLengths(edgeCount);
 		ShapeMorphImpl::InterpolateEdgeLengths(
 			interpEdgeLengths, 
+			edges,
 			meshes, 
 			t, 
 			interpolateFunction);

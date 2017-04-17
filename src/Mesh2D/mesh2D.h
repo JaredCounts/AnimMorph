@@ -31,8 +31,6 @@ public:
 	const Matrix2Xf &GetPoints_Local() const;
 	const Matrix3Xi &GetTriangles() const;
 
-	const Matrix2Xi GetEdges() const;
-
 	const Transform2f &GetTransform() const;
 
 private:

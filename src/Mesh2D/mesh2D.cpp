@@ -82,41 +82,6 @@ const Matrix3Xi &Mesh2D::GetTriangles() const
 	return triangles;
 }
 
-const Matrix2Xi Mesh2D::GetEdges() const
-{	
-	// XXX: could be more efficient.
-	// XXX: could also cache the results 
-
-	std::unordered_set<std::pair<unsigned int, unsigned int>, pairhash> edgeSet;
-
-	for (unsigned int i = 0; i < TriangleCount(); i++)
-	{
-		const Vector3i triangle = triangles.col(i);
-		for (unsigned int j = 0; j < 3; j++)
-		{
-			std::pair<int, int> edge(triangle[j], triangle[(j + 1) % 3]);
-			std::pair<int, int> edgeReversed(edge.second, edge.first);
-
-			if (edgeSet.find(edge) == edgeSet.end() 
-				&& edgeSet.find(edgeReversed) == edgeSet.end())
-			{
-				edgeSet.emplace(edge);
-			}
-		}
-	}
-
-	Matrix2Xi edges;
-	edges.conservativeResize(2, edgeSet.size());
-	unsigned int i = 0;
-	for (auto &edge : edgeSet)
-	{
-		edges.col(i) = Vector2i(edge.first, edge.second);
-		i += 1;
-	}
-
-	return edges;
-}
-
 const Transform<float, 2, TransformTraits::Affine>& Mesh2D::GetTransform() const
 {
 	return transform;

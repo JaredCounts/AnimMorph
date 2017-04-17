@@ -4,7 +4,7 @@
 
 namespace Interpolation
 {
-	LLT<MatrixXf> GetSecondOrderSolver(float n, bool closed)
+	LLT<MatrixXf> GetSecondOrderSolver(unsigned int n, bool closed)
 	{
 		MatrixXf integralSystem
 			= MatrixXf::Zero(n, n);
@@ -127,7 +127,6 @@ namespace Interpolation
 		const unsigned int pieceCount = values.rows();
 
 		VectorXf interpolated(valueCount);
-
 
 		auto &solver = GetSecondOrderSolver(pieceCount, closed);
 		for (unsigned valueIndex = 0; valueIndex < valueCount; valueIndex++)

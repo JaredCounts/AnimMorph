@@ -10,7 +10,7 @@ MeshHelper::MeshHelper(const P_Mesh2D &mesh)
 
 	const unsigned int vertCount = mesh->PointCount();
 
-	// std::map<unsigned int, unsigned int> edgeToEdgeIndex;
+	// std::unordered_map<unsigned int, unsigned int> edgeToEdgeIndex;
 	// ====
 	for (unsigned int edgeIndex = 0; edgeIndex < edgeCount; edgeIndex++)
 	{
@@ -24,7 +24,7 @@ MeshHelper::MeshHelper(const P_Mesh2D &mesh)
 		edgeToEdgeIndex.emplace(edgeReversed, edgeIndex);
 	}
 
-	// std::map<unsigned int, std::vector<unsigned int>> edgeIndexToTriIndices;
+	// std::unordered_map<unsigned int, std::vector<unsigned int>> edgeIndexToTriIndices;
 	// ====
 	for (unsigned int triIndex = 0; triIndex < triCount; triIndex++)
 	{
@@ -41,7 +41,7 @@ MeshHelper::MeshHelper(const P_Mesh2D &mesh)
 		}
 	}
 
-	// std::map<unsigned int, bool> vertexOnBoundary;
+	// std::unordered_map<unsigned int, bool> vertexOnBoundary;
 	// ====
 	for (unsigned int vertIndex = 0; vertIndex < vertCount; vertIndex++)
 	{
@@ -61,8 +61,8 @@ MeshHelper::MeshHelper(const P_Mesh2D &mesh)
 			vertexOnBoundary[vertIndexB] || adjTriangleCount == 1;
 	}
 
-	// std::map<unsigned int, std::vector<unsigned int>> triIndexToAdjTriIndices;
-	// std::map<UIntPair, unsigned int> triIndicesToCommonEdgeIndex
+	// std::unordered_map<unsigned int, std::vector<unsigned int>> triIndexToAdjTriIndices;
+	// std::unordered_map<UIntPair, unsigned int> triIndicesToCommonEdgeIndex
 	// ====
 	for (unsigned int triIndex = 0; triIndex < triCount; triIndex++)
 	{
@@ -104,7 +104,7 @@ MeshHelper::MeshHelper(const P_Mesh2D &mesh)
 		}
 	}
 
-	// std::map<UIntPair, unsigned int> oppVertIndexFromVertIndexAndEdgeIndex;
+	// std::unordered_map<UIntPair, unsigned int> oppVertIndexFromVertIndexAndEdgeIndex;
 	// ====
 	for (unsigned int edgeIndex = 0; edgeIndex < edgeCount; edgeIndex++)
 	{

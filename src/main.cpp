@@ -1,6 +1,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include <chrono>
 #include <vector>
 #include <iostream>
 using namespace std;
@@ -130,7 +131,13 @@ int main(int argc, char** argv)
 
 	P_Mesh2Ds interpMeshes;
 	int meshCount = 600;
+
+	typedef std::chrono::high_resolution_clock Time;
+	typedef std::chrono::milliseconds ms;
+	typedef std::chrono::duration<float> fsec;	
+
 	std::cout << "start\n";
+	auto t0 = Time::now();
 	for (int i = 0; i < meshCount; i++)
 	{
 		float t = (meshes.size()-1) * i * (1.0 / (meshCount - 1));
@@ -156,7 +163,9 @@ int main(int argc, char** argv)
 
 		interpMeshesLinear.back()->Translate(Vector2f(50, 0));
 	}
-	std::cout << "finish\n";
+	auto t1 = Time::now();
+	fsec fs = t1 - t0;
+	std::cout << "Finished. Took " << fs.count() << " seconds.\n";
 
 	camera->SetDimensions(width, height);
 	camera->SetDistance(5);

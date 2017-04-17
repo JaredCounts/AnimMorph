@@ -1,7 +1,11 @@
 #include "mesh2D.h"
 
-#include <set>
+#include <unordered_set>
+
 #include <assert.h>
+
+#include "../Misc/pairHash.h"
+
 
 Mesh2D::Mesh2D(const Mesh2D & mesh) :
 	points(mesh.GetPoints_Local()),
@@ -77,12 +81,13 @@ const Matrix3Xi &Mesh2D::GetTriangles() const
 {
 	return triangles;
 }
+
 const Matrix2Xi Mesh2D::GetEdges() const
 {	
 	// XXX: could be more efficient.
 	// XXX: could also cache the results 
 
-	std::set<std::pair<unsigned int, unsigned int>> edgeSet;
+	std::unordered_set<std::pair<unsigned int, unsigned int>, pairhash> edgeSet;
 
 	for (unsigned int i = 0; i < TriangleCount(); i++)
 	{

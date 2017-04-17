@@ -5,6 +5,8 @@
 #include <map>
 #include <unordered_map>
 
+#include "../Misc/pairHash.h"
+
 /*
 MeshHelper
 
@@ -80,15 +82,13 @@ private:
 	typedef std::pair<unsigned int, unsigned int> UIntPair;
 	typedef std::vector<unsigned int> UIntVector;
 
-	// xxx todo: implement hash function for UIntPair for unordered_map
-
-	std::map<UIntPair, unsigned int> edgeToEdgeIndex;
+	std::unordered_map<UIntPair, unsigned int, pairhash> edgeToEdgeIndex;
 	std::unordered_map<unsigned int, UIntVector> edgeIndexToTriIndices;
 	std::unordered_map<unsigned int, bool> vertexOnBoundary;
 	std::unordered_map<unsigned int, UIntVector> triIndexToAdjTriIndices;
-	std::map<UIntPair, unsigned int> triIndicesToCommonEdgeIndex;
+	std::unordered_map<UIntPair, unsigned int, pairhash> triIndicesToCommonEdgeIndex;
 
 	// keyed by (vertIndex, edgeIndex) where edgeIndex is opposite to
 	// vert index on the vert's triangle.
-	std::map<UIntPair, unsigned int> oppVertIndexFromVertIndexAndEdgeIndex;
+	std::unordered_map<UIntPair, unsigned int, pairhash> oppVertIndexFromVertIndexAndEdgeIndex;
 };

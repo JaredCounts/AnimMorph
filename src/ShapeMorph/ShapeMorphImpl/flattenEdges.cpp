@@ -92,7 +92,7 @@ namespace ShapeMorphImpl
 		for (int iteration = 0; iteration < maxIterationCount; iteration++)
 		{
 			// 1. Generate Energy Gradient
-			std::cout << "\t1. Generate energy gradient.\n";
+			// std::cout << "\t1. Generate energy gradient.\n";
 			VectorXf energyGradient = VectorXf::Zero(coeffCount);
 
 			VectorXf vertexAngles = VectorXf::Zero(pointCount);
@@ -263,7 +263,7 @@ namespace ShapeMorphImpl
 			// at each vector to the flattened edge
 			// i.e. flatEdgeLength = e^(u[i] + u[j]) * edgeLength
 			// so u = "vertexLogEdgeContribution"
-			std::cout << "\t3. Update log edge contributions.\n";
+			//std::cout << "\t3. Update log edge contributions.\n";
 			SparseQR<SparseMatrix<float>, COLAMDOrdering<int>> solver;
 
 			// solver.analyzePattern(A);

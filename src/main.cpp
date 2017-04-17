@@ -129,7 +129,8 @@ int main(int argc, char** argv)
 	meshes.push_back(mesh);
 
 	P_Mesh2Ds interpMeshes;
-	int meshCount = 60;
+	int meshCount = 600;
+	std::cout << "start\n";
 	for (int i = 0; i < meshCount; i++)
 	{
 		float t = (meshes.size()-1) * i * (1.0 / (meshCount - 1));
@@ -155,6 +156,7 @@ int main(int argc, char** argv)
 
 		interpMeshesLinear.back()->Translate(Vector2f(50, 0));
 	}
+	std::cout << "finish\n";
 
 	camera->SetDimensions(width, height);
 	camera->SetDistance(5);

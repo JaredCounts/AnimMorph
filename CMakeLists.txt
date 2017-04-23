@@ -11,6 +11,9 @@ set(EIGEN3_LOCATION ${CMAKE_SOURCE_DIR}/../../../../Libraries/eigen/build17/inst
 # glut/freeglut // for rendering
 set(GLUT_ROOT_PATH ${CMAKE_SOURCE_DIR}/../../../../Libraries/freeglut-3.0.0/build)
 
+# RapidXML // XML (svg) parser
+set(RAPIDXML_DIR ${CMAKE_SOURCE_DIR}/../../../../Libraries/rapidxml-1.13)
+
 # ==================
 
 # Project name
@@ -38,8 +41,6 @@ include_directories(${EIGEN3_LOCATION}/lib/cmake/eigen3)
 find_package(Eigen3 REQUIRED)
 
 include_directories(${EIGEN3_INCLUDE_DIR})
-
-
 
 # OPENGL
 # ======
@@ -98,6 +99,9 @@ link_libraries(${GLEW_LIBRARY})
 # include_directories(${GLUT_INCLUDE_DIR})
 # link_libraries(${GLUT_LIBRARIES})
 
+# RapidXML
+# ========
+include_directories(${RAPIDXML_DIR})
 
 # Install directory
 # =================

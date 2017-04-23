@@ -18,6 +18,8 @@ using namespace std;
 #include "Interpolation\linear.h"
 #include "Interpolation\naturalCubicSpline.h"
 
+#include "Mesh2D/loadMesh.h"
+
 MouseManager mouseManager;
 
 P_Camera camera(new Camera());
@@ -138,34 +140,36 @@ int main(int argc, char** argv)
 
 	std::cout << "start\n";
 	auto t0 = Time::now();
-	for (int i = 0; i < meshCount; i++)
-	{
-		float t = (meshes.size()-1) * i * (1.0 / (meshCount - 1));
-		interpMeshes.push_back(
-			ShapeMorph::Interpolate(
-				meshes, 
-				t, 
-				meshHelper, 
-				Interpolation::CubicNaturalSplineFunc(true)));
-	}
+	//for (int i = 0; i < meshCount; i++)
+	//{
+	//	float t = (meshes.size()-1) * i * (1.0 / (meshCount - 1));
+	//	interpMeshes.push_back(
+	//		ShapeMorph::Interpolate(
+	//			meshes, 
+	//			t, 
+	//			meshHelper, 
+	//			Interpolation::CubicNaturalSplineFunc(true)));
+	//}
 
 
 	P_Mesh2Ds interpMeshesLinear;
-	for (int i = 0; i < meshCount; i++)
-	{
-		float t = (meshes.size() - 1) * i * (1.0 / (meshCount - 1));
-		interpMeshesLinear.push_back(
-			ShapeMorph::Interpolate(
-				meshes, 
-				t,
-				meshHelper, 
-				Interpolation::LinearFunc(true)));
+	//for (int i = 0; i < meshCount; i++)
+	//{
+	//	float t = (meshes.size() - 1) * i * (1.0 / (meshCount - 1));
+	//	interpMeshesLinear.push_back(
+	//		ShapeMorph::Interpolate(
+	//			meshes, 
+	//			t,
+	//			meshHelper, 
+	//			Interpolation::LinearFunc(true)));
 
-		interpMeshesLinear.back()->Translate(Vector2f(50, 0));
-	}
+	//	interpMeshesLinear.back()->Translate(Vector2f(50, 0));
+	//}
 	auto t1 = Time::now();
 	fsec fs = t1 - t0;
 	std::cout << "Finished. Took " << fs.count() << " seconds.\n";
+
+	P_Mesh2D person(new Mesh2D(LoadMesh::LoadMesh("person.svg")));
 
 	camera->SetDimensions(width, height);
 	camera->SetDistance(5);
@@ -253,11 +257,12 @@ int main(int argc, char** argv)
 	{
 		renderer->Clear();
 
-		renderer->Render(interpMeshes[meshIndex]);
-		meshIndex = (meshIndex + 1) % interpMeshes.size();
+		// renderer->Render(interpMeshes[meshIndex]);
+		// renderer->Render(interpMeshesLinear[meshIndex]);
+		// meshIndex = (meshIndex + 1) % interpMeshes.size();
 
 
-		renderer->Render(interpMeshesLinear[meshIndex]);
+		renderer->Render(person);
 		
 		//for (auto &mesh : interpMeshes)
 		//{

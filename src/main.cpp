@@ -14,11 +14,14 @@ using namespace std;
 #include "Mouse/mouseable.h"
 
 #include "ShapeMorph\shapeMorph.h"
+#include "ShapeMorph\ShapeMorphImpl\edgeInterpolate.h"
 
 #include "Interpolation\linear.h"
 #include "Interpolation\naturalCubicSpline.h"
+#include "Interpolation\bezier.h"
 
 #include "Mesh2D/loadMesh.h"
+
 
 MouseManager mouseManager;
 
@@ -117,7 +120,7 @@ int main(int argc, char** argv)
 		}
 	}
 
-	float spacing = 100;
+	float spacing = 15;
 	mesh->Translate(Vector2f(0, 0));
 	mesh2->Translate(Vector2f(0, 50));
 	mesh3->Translate(Vector2f(0, 100));
@@ -128,11 +131,10 @@ int main(int argc, char** argv)
 	P_Mesh2Ds meshes;
 	meshes.push_back(mesh);
 	meshes.push_back(mesh2);
-	meshes.push_back(mesh3);
-	meshes.push_back(mesh);
+	//meshes.push_back(mesh3);
+	//meshes.push_back(mesh);
 
-	P_Mesh2Ds interpMeshes;
-	int meshCount = 600;
+	int meshCount = 30;
 
 	typedef std::chrono::high_resolution_clock Time;
 	typedef std::chrono::milliseconds ms;
@@ -140,6 +142,8 @@ int main(int argc, char** argv)
 
 	std::cout << "start\n";
 	auto t0 = Time::now();
+
+	//P_Mesh2Ds interpMeshes;
 	//for (int i = 0; i < meshCount; i++)
 	//{
 	//	float t = (meshes.size()-1) * i * (1.0 / (meshCount - 1));
@@ -152,10 +156,11 @@ int main(int argc, char** argv)
 	//}
 
 
-	P_Mesh2Ds interpMeshesLinear;
+	//P_Mesh2Ds interpMeshesLinear;
 	//for (int i = 0; i < meshCount; i++)
 	//{
 	//	float t = (meshes.size() - 1) * i * (1.0 / (meshCount - 1));
+	//	
 	//	interpMeshesLinear.push_back(
 	//		ShapeMorph::Interpolate(
 	//			meshes, 
@@ -163,8 +168,76 @@ int main(int argc, char** argv)
 	//			meshHelper, 
 	//			Interpolation::LinearFunc(true)));
 
-	//	interpMeshesLinear.back()->Translate(Vector2f(50, 0));
+	//	interpMeshesLinear.back()->Translate(Vector2f(spacing * i, 0));
 	//}
+
+	P_Mesh2Ds interpMeshesBezier;
+
+	VectorXf start(meshHelper.GetEdges().cols());
+	//VectorXf controlPointA(meshHelper.GetEdges().cols());
+	//VectorXf controlPointB(meshHelper.GetEdges().cols());
+	VectorXf end(meshHelper.GetEdges().cols());
+
+	ShapeMorphImpl::InterpolateEdgeLengths(
+		start,
+		meshHelper.GetEdges(),
+		meshes,
+		0,
+		Interpolation::CubicNaturalSplineFunc(false));
+	//ShapeMorphImpl::InterpolateEdgeLengths(
+	//	controlPointA,
+	//	meshHelper.GetEdges(),
+	//	meshes,
+	//	0.1,
+	//	Interpolation::CubicNaturalSplineFunc(false));
+	//ShapeMorphImpl::InterpolateEdgeLengths(
+	//	controlPointB,
+	//	meshHelper.GetEdges(),
+	//	meshes,
+	//	0.9,
+	//	Interpolation::CubicNaturalSplineFunc(false));
+	ShapeMorphImpl::InterpolateEdgeLengths(
+		end,
+		meshHelper.GetEdges(),
+		meshes,
+		1,
+		Interpolation::CubicNaturalSplineFunc(false));
+
+	// float length = controlPointA.norm();
+
+	// controlPointA +=  2 * VectorXf::Ones(meshHelper.GetEdges().cols());
+
+	// controlPointA = controlPointA * length / controlPointA.norm();
+
+	VectorXf controlDirA = start; // controlPointA - start;
+	VectorXf controlDirB = end; // controlPointA - end;
+
+	controlDirA = controlDirA - controlDirB * (controlDirA.dot(controlDirB)) / (controlDirA.norm() * controlDirB.norm());
+
+	controlDirA = controlDirA / controlDirA.norm();
+	controlDirB = controlDirB / controlDirB.norm();
+
+	float angleA = M_PI / 3;
+	float angleB = 2 * M_PI / 3;
+	VectorXf controlDirAF = controlDirA * cos(angleA) + controlDirB * sin(angleB);
+	VectorXf controlDirBF = controlDirA * cos(angleB) + controlDirB * sin(angleB);
+
+	Interpolation::InterpolationFunc bezierInterpFunc = Interpolation::BezierFunc(start + controlDirAF, end + controlDirBF);
+
+	for (int i = 0; i < meshCount; i++)
+	{
+		float t = (meshes.size() - 1) * i * (1.0 / (meshCount - 1));
+		std::cout << t << '\n';
+		interpMeshesBezier.push_back(
+			ShapeMorph::Interpolate(
+				meshes,
+				t,
+				meshHelper,
+				bezierInterpFunc));
+
+		interpMeshesBezier.back()->Translate(Vector2f(spacing * i, 0));
+	}
+
 	auto t1 = Time::now();
 	fsec fs = t1 - t0;
 	std::cout << "Finished. Took " << fs.count() << " seconds.\n";
@@ -249,7 +322,7 @@ int main(int argc, char** argv)
 
 	glfwSetWindowSizeCallback(window, windowResizeFunction);
 
-
+	float angle = 0;
 	int meshIndex = 0;
 	// Check if the ESC key was pressed or the window was closed
 	while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
@@ -262,13 +335,40 @@ int main(int argc, char** argv)
 		// meshIndex = (meshIndex + 1) % interpMeshes.size();
 
 
-		renderer->Render(person);
+		//renderer->Render(person);
 		
 		//for (auto &mesh : interpMeshes)
 		//{
 		//	renderer->Render(mesh);
 		//}
 		
+		for (auto &mesh : interpMeshesBezier)
+		{
+			renderer->Render(mesh);
+		}
+
+
+		angle += 0.05;
+		float angleA = angle + M_PI / 2;
+		float angleB = -0.7 * angle + 2 * M_PI / 2;
+		VectorXf controlDirAF = controlDirA * cos(angleA) + controlDirB * sin(angleB);
+		VectorXf controlDirBF = controlDirA * cos(angleB) + controlDirB * sin(angleB);
+
+		Interpolation::InterpolationFunc bezierInterpFunc = Interpolation::BezierFunc(start + 10 * controlDirAF, end + 10 * controlDirBF);
+
+		for (int i = 0; i < meshCount; i++)
+		{
+			float t = (meshes.size() - 1) * i * (1.0 / (meshCount - 1));
+			interpMeshesBezier[i] = (
+				ShapeMorph::Interpolate(
+					meshes,
+					t,
+					meshHelper,
+					bezierInterpFunc));
+
+			interpMeshesBezier[i]->Translate(Vector2f(spacing * i, 0));
+		}
+
 		//renderer->Render(mesh);
 		//renderer->Render(mesh2);
 		//renderer->Render(mesh3);

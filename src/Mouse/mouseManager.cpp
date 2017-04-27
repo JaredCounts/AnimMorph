@@ -62,3 +62,13 @@ void MouseManager::AddMouseable(P_Mouseable mouseable)
 {
 	mouseables.push_back(mouseable);
 }
+
+int MouseManager::GetMouseX() const
+{
+	return mouseX;
+}
+
+int MouseManager::GetMouseY() const
+{
+	return mouseY;
+}

@@ -14,6 +14,9 @@ public:
 
 	void AddMouseable(P_Mouseable mouseable);
 
+	int GetMouseX() const;
+	int GetMouseY() const;
+
 private:
 	std::vector<P_Mouseable> mouseables;
 

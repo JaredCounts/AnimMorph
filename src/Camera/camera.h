@@ -41,6 +41,9 @@ public:
     Matrix4f GetRotation() const { return mCurrentRot; }
     float GetDistance() const { return mCurrentDistance; }
 
+	float GetWidth() const { return mDimensions[0]; };
+	float GetHeight() const { return mDimensions[1]; };
+
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW  
 private:
 

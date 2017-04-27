@@ -322,6 +322,7 @@ int main(int argc, char** argv)
 
 	glfwSetWindowSizeCallback(window, windowResizeFunction);
 
+
 	float angle = 0;
 	int meshIndex = 0;
 	// Check if the ESC key was pressed or the window was closed
@@ -348,13 +349,20 @@ int main(int argc, char** argv)
 		}
 
 
-		angle += 0.05;
-		float angleA = angle + M_PI / 2;
-		float angleB = -0.7 * angle + 2 * M_PI / 2;
+		float mouseX = mouseManager.GetMouseX();
+		float mouseY = mouseManager.GetMouseY();
+		float centerX = camera->GetWidth() / 2;
+		float centerY = camera->GetHeight() / 2;
+		std::cout << mouseX << ", " << mouseY << "; " << centerX << ", " << centerY << '\n';
+		float mag = (Vector2f(mouseX, mouseY) - Vector2f(centerX, centerY)).norm() * 0.06;
+		//angle += 0.05;
+		angle = -atan2(mouseY - centerY, mouseX - centerX);
+		float angleA = angle; // +M_PI / 2;
+		float angleB = 0; // -0.7 * angle + 2 * M_PI / 2;
 		VectorXf controlDirAF = controlDirA * cos(angleA) + controlDirB * sin(angleB);
 		VectorXf controlDirBF = controlDirA * cos(angleB) + controlDirB * sin(angleB);
 
-		Interpolation::InterpolationFunc bezierInterpFunc = Interpolation::BezierFunc(start + 10 * controlDirAF, end + 10 * controlDirBF);
+		Interpolation::InterpolationFunc bezierInterpFunc = Interpolation::BezierFunc(start + mag * controlDirAF, end + controlDirBF); // mag * 
 
 		for (int i = 0; i < meshCount; i++)
 		{

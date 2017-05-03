@@ -1,150 +1,104 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-
 #include "triangulate.h"
+
+#define REAL double
+#define VOID int
+#define ANSI_DECLARATORS
+
+extern "C"
+{
+#include "triangle.h"
+}
+
+#undef ANSI_DECLARATORS
+#undef VOID
+#undef REAL
+
+#include <iostream>
 
 namespace Triangulate
 {
-
-	static const float EPSILON=0.0000000001f;
-
-	float Triangulate::Area(const Matrix2Xf &contour)
+	Mesh2D Triangulate(
+		const Matrix2Xi &edges,
+		const Matrix2Xf &vertices)
 	{
+		std::string full_flags = "a0.1qpz";
 
-		int n = contour.cols();
+		typedef Map< Matrix<double, Dynamic, Dynamic, ColMajor> > MapXdr;
+		typedef Map< Matrix<int, Dynamic, Dynamic, ColMajor> > MapXir;
 
-		float A=0.0f;
-
-		for(int p=n-1,q=0; q<n; p=q++)
+		triangulateio in;
+		in.numberofpoints = vertices.cols();
+		in.pointlist = (double*)calloc(vertices.size(), sizeof(double));
 		{
-			A += contour(0,p)*contour(1,q) - contour(0,q)*contour(1,p);
+			MapXdr inpl(in.pointlist, vertices.rows(), vertices.cols());
+			inpl = vertices.template cast<double>();
 		}
-		return A*0.5f;
-	}
-
-	/*
-	InsideTriangle decides if a point P is Inside of the triangle
-	defined by A, B, C.
-	*/
-	bool Triangulate::InsideTriangle(float Ax, float Ay,
-		float Bx, float By,
-		float Cx, float Cy,
-		float Px, float Py)
-
-	{
-		float ax, ay, bx, by, cx, cy, apx, apy, bpx, bpy, cpx, cpy;
-		float cCROSSap, bCROSScp, aCROSSbp;
-
-		ax = Cx - Bx;  ay = Cy - By;
-		bx = Ax - Cx;  by = Ay - Cy;
-		cx = Bx - Ax;  cy = By - Ay;
-		apx= Px - Ax;  apy= Py - Ay;
-		bpx= Px - Bx;  bpy= Py - By;
-		cpx= Px - Cx;  cpy= Py - Cy;
-
-		aCROSSbp = ax*bpy - ay*bpx;
-		cCROSSap = cx*apy - cy*apx;
-		bCROSScp = bx*cpy - by*cpx;
-
-		return ((aCROSSbp >= 0.0f) && (bCROSScp >= 0.0f) && (cCROSSap >= 0.0f));
-	};
-
-	bool Triangulate::Snip(const Matrix2Xf &contour,int u,int v,int w,int n,int *V)
-	{
-		int p;
-		float Ax, Ay, Bx, By, Cx, Cy, Px, Py;
-
-		Ax = contour(0, V[u]);
-		Ay = contour(1, V[u]);
-
-		Bx = contour(0, V[v]);
-		By = contour(1, V[v]);
-
-		Cx = contour(0, V[w]);
-		Cy = contour(1, V[w]);
-
-		if ( EPSILON > (((Bx-Ax)*(Cy-Ay)) - ((By-Ay)*(Cx-Ax))) ) return false;
-
-		for (p=0;p<n;p++)
+		for (int i = 0; i < vertices.cols(); i++)
 		{
-			if( (p == u) || (p == v) || (p == w) ) continue;
-			Px = contour(0, V[p]);
-			Py = contour(1, V[p]);
-			if (InsideTriangle(Ax,Ay,Bx,By,Cx,Cy,Px,Py)) return false;
+			assert(in.pointlist[i * 2] == vertices(0, i));
+			assert(in.pointlist[i * 2 + 1] == vertices(1, i));
 		}
 
-		return true;
-	}
+		in.numberofpointattributes = 0;
+		in.pointmarkerlist = (int*)calloc(0, sizeof(int));
 
-	bool Triangulate::Process(const Matrix2Xf &contour, Matrix2Xf &result)
-	{
-		/* allocate and initialize list of Vertices in polygon */
+		in.trianglelist = NULL;
+		in.numberoftriangles = 0;
+		in.numberofcorners = 0;
+		in.numberoftriangleattributes = 0;
+		in.triangleattributelist = NULL;
 
-		int n = contour.cols();
-		if ( n < 3 ) return false;
-
-		int *V = new int[n];
-
-		/* we want a counter-clockwise polygon in V */
-
-		if ( 0.0f < Area(contour) )
-			for (int v=0; v<n; v++) V[v] = v;
-		else
-			for(int v=0; v<n; v++) V[v] = (n-1)-v;
-
-		int nv = n;
-
-		/*  remove nv-2 Vertices, creating 1 triangle every time */
-		int count = 2*nv;   /* error detection */
-
-		for(int m=0, v=nv-1; nv>2; )
+		in.numberofsegments = edges.cols();
+		in.segmentlist = (int*)calloc(edges.size(), sizeof(int));
 		{
-			/* if we loop, it is probably a non-simple polygon */
-			if (0 >= (count--))
-			{
-				//** Triangulate: ERROR - probable bad polygon!
-				return false;
-			}
-
-			/* three consecutive vertices in current polygon, <u,v,w> */
-			int u = v  ; if (nv <= u) u = 0;     /* previous */
-			v = u+1; if (nv <= v) v = 0;     /* new v    */
-			int w = v+1; if (nv <= w) w = 0;     /* next     */
-
-			if ( Snip(contour,u,v,w,nv,V) )
-			{
-				int a,b,c,s,t;
-
-
-				unsigned int i = result.cols();
-
-				result.conservativeResize(result.rows(), result.cols() + 3);
-
-				/* true names of the vertices */
-				a = V[u]; b = V[v]; c = V[w];
-
-				/* output Triangle */
-				result.col(i++) = Vector2f(contour.col(a));
-				result.col(i++) = Vector2f(contour.col(b));
-				result.col(i++) = Vector2f(contour.col(c));
-
-				m++;
-
-				/* remove v from remaining polygon */
-				for(s=v,t=v+1;t<nv;s++,t++) V[s] = V[t]; nv--;
-
-				/* resest error detection counter */
-				count = 2*nv;
-			}
+			MapXir insl(in.segmentlist, edges.rows(), edges.cols());
+			insl = edges.template cast<int>();
 		}
 
+		for (int i = 0; i < edges.cols(); i++)
+		{
+			assert(in.segmentlist[i * 2] == edges(0, i));
+			assert(in.segmentlist[i * 2 + 1] == edges(1, i));
+		}
 
+		in.segmentmarkerlist = (int*)calloc(edges.cols(), sizeof(int));
+		for (int i = 0; i < edges.cols(); i++)
+		{
+			in.segmentmarkerlist[i] = 1;
+		}
 
-		delete V;
+		in.numberofholes = 0;
+		in.holelist = (double*)calloc(0, sizeof(double));
+		
+		in.numberofregions = 0;
 
-		return true;
+		triangulateio out;
+
+		out.pointlist = NULL;
+		out.trianglelist = NULL;
+		out.segmentlist = NULL;
+		out.segmentmarkerlist = NULL;
+		out.pointmarkerlist = NULL;
+
+		::triangulate(const_cast<char*>(full_flags.c_str()), &in, &out, 0);
+
+		Matrix2Xf outVertices = MapXdr(out.pointlist, 2, out.numberofpoints).cast<float>();
+		Matrix3Xi outFaces = MapXir(out.trianglelist, 3, out.numberoftriangles);
+
+		// Cleanup in
+		free(in.pointlist);
+		free(in.pointmarkerlist);
+		free(in.segmentlist);
+		free(in.segmentmarkerlist);
+		free(in.holelist);
+
+		// Cleanup out
+		free(out.pointlist);
+		free(out.trianglelist);
+		free(out.segmentlist);
+		free(out.segmentmarkerlist);
+		free(out.pointmarkerlist);
+
+		return Mesh2D(outVertices, outFaces);
 	}
-
-}
+};

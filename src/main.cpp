@@ -224,19 +224,19 @@ int main(int argc, char** argv)
 
 	Interpolation::InterpolationFunc bezierInterpFunc = Interpolation::BezierFunc(start + controlDirAF, end + controlDirBF);
 
-	for (int i = 0; i < meshCount; i++)
-	{
-		float t = (meshes.size() - 1) * i * (1.0 / (meshCount - 1));
-		std::cout << t << '\n';
-		interpMeshesBezier.push_back(
-			ShapeMorph::Interpolate(
-				meshes,
-				t,
-				meshHelper,
-				bezierInterpFunc));
+	//for (int i = 0; i < meshCount; i++)
+	//{
+	//	float t = (meshes.size() - 1) * i * (1.0 / (meshCount - 1));
+	//	std::cout << t << '\n';
+	//	interpMeshesBezier.push_back(
+	//		ShapeMorph::Interpolate(
+	//			meshes,
+	//			t,
+	//			meshHelper,
+	//			bezierInterpFunc));
 
-		interpMeshesBezier.back()->Translate(Vector2f(spacing * i, 0));
-	}
+	//	interpMeshesBezier.back()->Translate(Vector2f(spacing * i, 0));
+	//}
 
 	auto t1 = Time::now();
 	fsec fs = t1 - t0;
@@ -336,7 +336,7 @@ int main(int argc, char** argv)
 		// meshIndex = (meshIndex + 1) % interpMeshes.size();
 
 
-		//renderer->Render(person);
+		renderer->Render(person);
 		
 		//for (auto &mesh : interpMeshes)
 		//{
@@ -349,33 +349,33 @@ int main(int argc, char** argv)
 		}
 
 
-		float mouseX = mouseManager.GetMouseX();
-		float mouseY = mouseManager.GetMouseY();
-		float centerX = camera->GetWidth() / 2;
-		float centerY = camera->GetHeight() / 2;
-		std::cout << mouseX << ", " << mouseY << "; " << centerX << ", " << centerY << '\n';
-		float mag = (Vector2f(mouseX, mouseY) - Vector2f(centerX, centerY)).norm() * 0.06;
-		//angle += 0.05;
-		angle = -atan2(mouseY - centerY, mouseX - centerX);
-		float angleA = angle; // +M_PI / 2;
-		float angleB = 0; // -0.7 * angle + 2 * M_PI / 2;
-		VectorXf controlDirAF = controlDirA * cos(angleA) + controlDirB * sin(angleB);
-		VectorXf controlDirBF = controlDirA * cos(angleB) + controlDirB * sin(angleB);
+		//float mouseX = mouseManager.GetMouseX();
+		//float mouseY = mouseManager.GetMouseY();
+		//float centerX = camera->GetWidth() / 2;
+		//float centerY = camera->GetHeight() / 2;
+		//std::cout << mouseX << ", " << mouseY << "; " << centerX << ", " << centerY << '\n';
+		//float mag = (Vector2f(mouseX, mouseY) - Vector2f(centerX, centerY)).norm() * 0.06;
+		////angle += 0.05;
+		//angle = -atan2(mouseY - centerY, mouseX - centerX);
+		//float angleA = angle; // +M_PI / 2;
+		//float angleB = 0; // -0.7 * angle + 2 * M_PI / 2;
+		//VectorXf controlDirAF = controlDirA * cos(angleA) + controlDirB * sin(angleB);
+		//VectorXf controlDirBF = controlDirA * cos(angleB) + controlDirB * sin(angleB);
 
-		Interpolation::InterpolationFunc bezierInterpFunc = Interpolation::BezierFunc(start + mag * controlDirAF, end + controlDirBF); // mag * 
+		//Interpolation::InterpolationFunc bezierInterpFunc = Interpolation::BezierFunc(start + mag * controlDirAF, end + controlDirBF); // mag * 
 
-		for (int i = 0; i < meshCount; i++)
-		{
-			float t = (meshes.size() - 1) * i * (1.0 / (meshCount - 1));
-			interpMeshesBezier[i] = (
-				ShapeMorph::Interpolate(
-					meshes,
-					t,
-					meshHelper,
-					bezierInterpFunc));
+		//for (int i = 0; i < meshCount; i++)
+		//{
+		//	float t = (meshes.size() - 1) * i * (1.0 / (meshCount - 1));
+		//	interpMeshesBezier[i] = (
+		//		ShapeMorph::Interpolate(
+		//			meshes,
+		//			t,
+		//			meshHelper,
+		//			bezierInterpFunc));
 
-			interpMeshesBezier[i]->Translate(Vector2f(spacing * i, 0));
-		}
+		//	interpMeshesBezier[i]->Translate(Vector2f(spacing * i, 0));
+		//}
 
 		//renderer->Render(mesh);
 		//renderer->Render(mesh2);

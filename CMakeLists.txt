@@ -14,6 +14,9 @@ set(GLUT_ROOT_PATH ${CMAKE_SOURCE_DIR}/../../../../Libraries/freeglut-3.0.0/buil
 # RapidXML // XML (svg) parser
 set(RAPIDXML_DIR ${CMAKE_SOURCE_DIR}/../../../../Libraries/rapidxml-1.13)
 
+# Triangle // triangulation
+set(TRIANGLE_DIR ${CMAKE_SOURCE_DIR}/../../../../Libraries/triangle)
+
 # ==================
 
 # Project name
@@ -59,7 +62,6 @@ link_libraries(${GLFW_LIBRARIES})
 
 # GLEW
 # ----
-
 set(GLEW_LOCATION ${CMAKE_SOURCE_DIR}/../../../../Libraries/glew-2.0.0/build/install)
 
 find_package(GLEW REQUIRED)
@@ -102,6 +104,19 @@ link_libraries(${GLEW_LIBRARY})
 # RapidXML
 # ========
 include_directories(${RAPIDXML_DIR})
+
+# Triangle
+# ========
+include_directories(${TRIANGLE_DIR})
+
+find_library( TRIANGLE_LIBRARY NAMES triangle
+         PATHS
+         ${TRIANGLE_DIR}
+         ${TRIANGLE_DIR}/Release
+         ${TRIANGLE_DIR}/build/Release
+         )
+
+link_libraries(${TRIANGLE_LIBRARY})
 
 # Install directory
 # =================

@@ -8,8 +8,6 @@
 class Mesh2D
 {
 public:
-	typedef Transform<float, 2, TransformTraits::Affine> Transform2f;
-
 	Mesh2D(const Mesh2D &mesh);
 
 	Mesh2D(Matrix2Xf points, Matrix3Xi triangles);

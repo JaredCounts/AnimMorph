@@ -348,7 +348,6 @@ int main(int argc, char** argv)
 			renderer->Render(mesh);
 		}
 
-
 		//float mouseX = mouseManager.GetMouseX();
 		//float mouseY = mouseManager.GetMouseY();
 		//float centerX = camera->GetWidth() / 2;

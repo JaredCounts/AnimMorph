@@ -8,6 +8,9 @@ Camera::Camera()
 {
 	mStartRot = Matrix4f::Identity();
 	mCurrentRot = Matrix4f::Identity();
+
+	zNear = 0.01f;
+	zFar = 10000.f;
 }
 
 void Camera::SetDimensions(int w, int h)
@@ -43,6 +46,43 @@ void Camera::SetRotation(const Matrix4f& rotation)
 void Camera::SetDistance(const float distance)
 {
 	mStartDistance = mCurrentDistance = distance;
+}
+
+Vector3f Camera::GetPointWorld(Vector2f pointView)
+{
+	float width = mViewport[2];
+	float height = mViewport[3];
+
+	// ray start/end positions on screen in camera space
+	Vector4f screen1(
+		2.0 * pointView.x() / width - 1.0, 
+		1.0 - 2.0 * pointView.y() / height, 
+		-1.0, 
+		1);
+	Vector4f screen2(
+		screen1.x(),
+		screen1.y(),
+		1.0,
+		1);
+
+	Matrix4f projectionViewInverse = (projectionMatrix() * viewMatrix()).inverse();
+
+	// convert ray start/end positions to homogeneous world space
+	Vector4f world1 = projectionViewInverse * screen1;
+	Vector4f world2 = projectionViewInverse * screen2;
+
+	// get world space positions
+	Vector3f world1H = world1.head(3) * (1.0 / world1.w());
+	Vector3f world2H = world2.head(3) * (1.0 / world2.w());
+	
+	// direction
+	Vector3f dir = world2H - world1H;
+
+	// compute value along ray for X-Y plane
+	float t = -world1H.z() / dir.z();
+
+	// compute ray position on X-Y plane
+	return world1H + dir * t;
 }
 
 void Camera::MouseClick(MouseButton button, int x, int y)
@@ -218,8 +258,6 @@ Matrix4f Camera::projectionMatrix() const
 {
 	float fovYRadians = mPerspective[0] * M_PI / 180.f;
 	float aspect = mPerspective[1];
-	float zNear = 0.1f;
-	float zFar = 1000.f;
 
 	float yScale = 1.f / tanf(0.5f * fovYRadians);
 	float xScale = yScale / aspect;

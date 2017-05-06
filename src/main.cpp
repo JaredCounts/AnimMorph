@@ -253,10 +253,11 @@ int main(int argc, char** argv)
 	auto mouseButtonFunction = [](GLFWwindow *window, int button, int action, int mods)
 	{
 		Mouseable::MouseButton mouseButtonState;
-
+		
 		// determine mouse state
 		if (action == GLFW_PRESS)
 		{
+			std::cout << camera->GetPointWorld(Vector2f(mouseManager.GetMouseX(), mouseManager.GetMouseY())) << "\n\n";
 			switch (button)
 			{
 			case GLFW_MOUSE_BUTTON_LEFT:

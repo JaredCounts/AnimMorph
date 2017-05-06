@@ -44,8 +44,11 @@ public:
 	float GetWidth() const { return mDimensions[0]; };
 	float GetHeight() const { return mDimensions[1]; };
 
+	Vector3f GetPointWorld(Vector2f pointView);
+
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW  
 private:
+	float zNear, zFar;
 
     // States 
     int     mDimensions[2];

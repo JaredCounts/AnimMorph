@@ -7,17 +7,20 @@
 struct Joint
 {
 	// initial pose transform relative to parent joint - this is the "from" transform
-	Transform2f localPoseTransform;
+	Transform2f unposedTransform_local;
 
 	// initial pose transform relative to origin
-	Transform2f globalPoseTransform;
+	Transform2f unposedTransform_global;
 
 	// final pose transform relative to parent joint - the "to" transform
-	Transform2f localTransform;
+	Transform2f posedTransform_local;
+
+	// final pose transform relative to world
+	Transform2f posedTransform_global;
 
 	// to transform from -> to
-	// we do globalPoseTransform.inverse() * globalTransform
-	Transform2f poseToCurrentTransform;
+	// we do globalUnposeTransform.inverse() * globalPosedTransform
+	Transform2f unposedToCurrentTransform_global;
 
 	typedef std::shared_ptr<Joint> P_Joint;
 	typedef std::vector<P_Joint> VP_Joints;

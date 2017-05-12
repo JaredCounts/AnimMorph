@@ -22,6 +22,9 @@ using namespace std;
 
 #include "Mesh2D/loadMesh.h"
 
+#include "Skeleton/skeleton.h"
+#include "Skeleton/joint.h"
+
 
 MouseManager mouseManager;
 
@@ -243,6 +246,91 @@ int main(int argc, char** argv)
 	std::cout << "Finished. Took " << fs.count() << " seconds.\n";
 
 	P_Mesh2D person(new Mesh2D(LoadMesh::LoadMesh("person.svg")));
+	
+	P_Joint root(new Joint);
+	root->unposedTransform_local = Transform2f(Translation2f(0,-1.5));
+	root->posedTransform_local = Transform2f(Translation2f(0, -1.5));
+
+	P_Joint chest(new Joint);
+	root->children.push_back(chest);
+	chest->unposedTransform_local = Transform2f(Translation2f(0, 13.5));
+	chest->posedTransform_local = Transform2f(Translation2f(0, 13.5));
+
+	P_Joint neck(new Joint);
+	chest->children.push_back(neck);
+	neck->unposedTransform_local = Transform2f(Translation2f(0, 7));
+	neck->posedTransform_local = Transform2f(Translation2f(0, 7));
+
+	//P_Joint head(new Joint);
+	//neck->children.push_back(head);
+	//head->unposedTransform_local = Transform2f(Translation2f(0, ));
+	//head->posedTransform_local = Transform2f(Translation2f(0, ));
+	//
+	P_Joint shoulderLeft(new Joint);
+	chest->children.push_back(shoulderLeft);
+	shoulderLeft->unposedTransform_local = Transform2f(Translation2f(-5, -3.25));
+	shoulderLeft->posedTransform_local = Transform2f(Translation2f(-5, -3.25));
+
+	P_Joint elbowLeft(new Joint);
+	shoulderLeft->children.push_back(elbowLeft);
+	elbowLeft->unposedTransform_local = Transform2f(Translation2f(-7.5, -3.25));
+	elbowLeft->posedTransform_local = Transform2f(Translation2f(-7.5, -3.25));
+
+	P_Joint handLeft(new Joint);
+	elbowLeft->children.push_back(handLeft);
+	handLeft->unposedTransform_local = Transform2f(Translation2f(-5, -7.75));
+	handLeft->posedTransform_local = Transform2f(Translation2f(-5, -7.75));
+	float angle = 1;
+
+
+	P_Joint shoulderRight(new Joint);
+	chest->children.push_back(shoulderRight);
+	shoulderRight->unposedTransform_local = Transform2f(Translation2f(5, -3.25));
+	shoulderRight->posedTransform_local = Transform2f(Translation2f(5, -3.25));
+
+	P_Joint elbowRight(new Joint);
+	shoulderRight->children.push_back(elbowRight);
+	elbowRight->unposedTransform_local = Transform2f(Translation2f(7.5, -3.25));
+	elbowRight->posedTransform_local = Transform2f(Translation2f(7.5, -3.25));
+
+	P_Joint handRight(new Joint);
+	elbowRight->children.push_back(handRight);
+	handRight->unposedTransform_local = Transform2f(Translation2f(5, -7.75));
+	handRight->posedTransform_local = Transform2f(Translation2f(5, -7.75));
+
+	P_Joint hipLeft(new Joint);
+	root->children.push_back(hipLeft);
+	hipLeft->unposedTransform_local = Transform2f(Translation2f(-2, -12.5));
+	hipLeft->posedTransform_local = Transform2f(Translation2f(-2, -12.5));
+
+	P_Joint kneeLeft(new Joint);
+	hipLeft->children.push_back(kneeLeft);
+	kneeLeft->unposedTransform_local = Transform2f(Translation2f(-2.5, -7.5));
+	kneeLeft->posedTransform_local = Transform2f(Translation2f(-2.5, -7.5));
+
+	P_Joint footLeft(new Joint);
+	kneeLeft->children.push_back(footLeft);
+	footLeft->unposedTransform_local = Transform2f(Translation2f(-0.5, -11));
+	footLeft->posedTransform_local = Transform2f(Translation2f(-0.5, -11));
+
+	P_Joint hipRight(new Joint);
+	root->children.push_back(hipRight);
+	hipRight->unposedTransform_local = Transform2f(Translation2f(2, -12.5));
+	hipRight->posedTransform_local = Transform2f(Translation2f(2, -12.5));
+
+	P_Joint kneeRight(new Joint);
+	hipRight->children.push_back(kneeRight);
+	kneeRight->unposedTransform_local = Transform2f(Translation2f(2.5, -7.5));
+	kneeRight->posedTransform_local = Transform2f(Translation2f(2.5, -7.5));
+
+	P_Joint footRight(new Joint);
+	kneeRight->children.push_back(footRight);
+	footRight->unposedTransform_local = Transform2f(Translation2f(0.5, -11));
+	footRight->posedTransform_local = Transform2f(Translation2f(0.5, -11));
+
+
+	Skeleton skeleton(person, root);
+
 
 	camera->SetDimensions(width, height);
 	camera->SetDistance(5);
@@ -323,13 +411,18 @@ int main(int argc, char** argv)
 
 	glfwSetWindowSizeCallback(window, windowResizeFunction);
 
-
-	float angle = 0;
 	int meshIndex = 0;
 	// Check if the ESC key was pressed or the window was closed
 	while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
 		glfwWindowShouldClose(window) == 0)
 	{
+		angle += 0.01;
+		// head->posedTransform_local.translation() = Rotation2Df(0.01) * head->posedTransform_local.translation(); //.rotate(0.01);
+		// head->posedTransform_local.prerotate(0.01);
+		// head->posedTransform_local = Transform2f(Translation2f(0,12) * Rotation2Df(angle));
+		elbowLeft->posedTransform_local.prerotate(-0.01);
+		//handLeft->posedTransform_local = Transform2f(Rotation2Df(angle) * Translation2f(-5, -7.5)); // * ;
+		
 		renderer->Clear();
 
 		// renderer->Render(interpMeshes[meshIndex]);
@@ -337,8 +430,10 @@ int main(int argc, char** argv)
 		// meshIndex = (meshIndex + 1) % interpMeshes.size();
 
 
-		renderer->Render(person);
+		//renderer->Render(person);
 		
+		renderer->Render(skeleton.PosedMesh());
+
 		//for (auto &mesh : interpMeshes)
 		//{
 		//	renderer->Render(mesh);

@@ -8,5 +8,6 @@ namespace ShapeMorphImpl
 		const VectorXf &edgeLengths,
 		const Matrix3Xi &triangles,
 		const Matrix2Xi &edges,
-		const MeshHelper &meshHelper);
+		const MeshHelper &meshHelper,
+		float firstTriangleAngle);
 }

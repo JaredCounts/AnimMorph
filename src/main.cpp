@@ -137,7 +137,7 @@ int main(int argc, char** argv)
 	//meshes.push_back(mesh3);
 	//meshes.push_back(mesh);
 
-	int meshCount = 30;
+	int meshCount = 600;
 
 	typedef std::chrono::high_resolution_clock Time;
 	typedef std::chrono::milliseconds ms;
@@ -174,58 +174,34 @@ int main(int argc, char** argv)
 	//	interpMeshesLinear.back()->Translate(Vector2f(spacing * i, 0));
 	//}
 
-	P_Mesh2Ds interpMeshesBezier;
+	//P_Mesh2Ds interpMeshesBezier;
 
-	VectorXf start(meshHelper.GetEdges().cols());
-	//VectorXf controlPointA(meshHelper.GetEdges().cols());
-	//VectorXf controlPointB(meshHelper.GetEdges().cols());
-	VectorXf end(meshHelper.GetEdges().cols());
+	//VectorXf start(meshHelper.GetEdges().cols());
+	////VectorXf controlPointA(meshHelper.GetEdges().cols());
+	////VectorXf controlPointB(meshHelper.GetEdges().cols());
+	//VectorXf end(meshHelper.GetEdges().cols());
 
-	ShapeMorphImpl::InterpolateEdgeLengths(
-		start,
-		meshHelper.GetEdges(),
-		meshes,
-		0,
-		Interpolation::CubicNaturalSplineFunc(false));
 	//ShapeMorphImpl::InterpolateEdgeLengths(
-	//	controlPointA,
+	//	start,
 	//	meshHelper.GetEdges(),
 	//	meshes,
-	//	0.1,
-	//	Interpolation::CubicNaturalSplineFunc(false));
-	//ShapeMorphImpl::InterpolateEdgeLengths(
-	//	controlPointB,
-	//	meshHelper.GetEdges(),
-	//	meshes,
-	//	0.9,
-	//	Interpolation::CubicNaturalSplineFunc(false));
-	//ShapeMorphImpl::InterpolateEdgeLengths(
-	//	end,
-	//	meshHelper.GetEdges(),
-	//	meshes,
-	//	1,
+	//	0,
 	//	Interpolation::CubicNaturalSplineFunc(false));
 
-	// float length = controlPointA.norm();
+	//VectorXf controlDirA = start; // controlPointA - start;
+	//VectorXf controlDirB = end; // controlPointA - end;
 
-	// controlPointA +=  2 * VectorXf::Ones(meshHelper.GetEdges().cols());
+	//controlDirA = controlDirA - controlDirB * (controlDirA.dot(controlDirB)) / (controlDirA.norm() * controlDirB.norm());
 
-	// controlPointA = controlPointA * length / controlPointA.norm();
+	//controlDirA = controlDirA / controlDirA.norm();
+	//controlDirB = controlDirB / controlDirB.norm();
 
-	VectorXf controlDirA = start; // controlPointA - start;
-	VectorXf controlDirB = end; // controlPointA - end;
+	//float angleA = M_PI / 3;
+	//float angleB = 2 * M_PI / 3;
+	//VectorXf controlDirAF = controlDirA * cos(angleA) + controlDirB * sin(angleB);
+	//VectorXf controlDirBF = controlDirA * cos(angleB) + controlDirB * sin(angleB);
 
-	controlDirA = controlDirA - controlDirB * (controlDirA.dot(controlDirB)) / (controlDirA.norm() * controlDirB.norm());
-
-	controlDirA = controlDirA / controlDirA.norm();
-	controlDirB = controlDirB / controlDirB.norm();
-
-	float angleA = M_PI / 3;
-	float angleB = 2 * M_PI / 3;
-	VectorXf controlDirAF = controlDirA * cos(angleA) + controlDirB * sin(angleB);
-	VectorXf controlDirBF = controlDirA * cos(angleB) + controlDirB * sin(angleB);
-
-	Interpolation::InterpolationFunc bezierInterpFunc = Interpolation::BezierFunc(start + controlDirAF, end + controlDirBF);
+	//Interpolation::InterpolationFunc bezierInterpFunc = Interpolation::BezierFunc(start + controlDirAF, end + controlDirBF);
 
 	//for (int i = 0; i < meshCount; i++)
 	//{
@@ -248,87 +224,190 @@ int main(int argc, char** argv)
 	P_Mesh2D person(new Mesh2D(LoadMesh::LoadMesh("person.svg")));
 	
 	P_Joint root(new Joint);
-	root->unposedTransform_local = Transform2f(Translation2f(0,-1.5));
-	root->posedTransform_local = Transform2f(Translation2f(0, -1.5));
+	root->unposedTransform_local = Transform2f(Translation2f(0, -12));//0,-1.5));
+	root->posedTransform_local = Transform2f(Translation2f(0, -12));
 
 	P_Joint chest(new Joint);
 	root->children.push_back(chest);
-	chest->unposedTransform_local = Transform2f(Translation2f(0, 13.5));
-	chest->posedTransform_local = Transform2f(Translation2f(0, 13.5));
+	chest->unposedTransform_local = Transform2f(Translation2f(0, 21)); // 0, 13.5));
+	chest->posedTransform_local = Transform2f(Translation2f(0, 21));
 
 	P_Joint neck(new Joint);
 	chest->children.push_back(neck);
-	neck->unposedTransform_local = Transform2f(Translation2f(0, 7));
-	neck->posedTransform_local = Transform2f(Translation2f(0, 7));
+	neck->unposedTransform_local = Transform2f(Translation2f(0, 6)); // //0, 7));
+	neck->posedTransform_local = Transform2f(Translation2f(0, 6));
 
-	//P_Joint head(new Joint);
-	//neck->children.push_back(head);
-	//head->unposedTransform_local = Transform2f(Translation2f(0, ));
-	//head->posedTransform_local = Transform2f(Translation2f(0, ));
-	//
+	P_Joint head(new Joint);
+	neck->children.push_back(head);
+	head->unposedTransform_local = Transform2f(Translation2f(0, 8));
+	head->posedTransform_local = Transform2f(Translation2f(0, 8));
+	
 	P_Joint shoulderLeft(new Joint);
 	chest->children.push_back(shoulderLeft);
-	shoulderLeft->unposedTransform_local = Transform2f(Translation2f(-5, -3.25));
-	shoulderLeft->posedTransform_local = Transform2f(Translation2f(-5, -3.25));
+	shoulderLeft->unposedTransform_local = Transform2f(Translation2f(-10, -0.5));// -5, -3.25));
+	shoulderLeft->posedTransform_local = Transform2f(Translation2f(-10, -0.5));
 
 	P_Joint elbowLeft(new Joint);
 	shoulderLeft->children.push_back(elbowLeft);
-	elbowLeft->unposedTransform_local = Transform2f(Translation2f(-7.5, -3.25));
-	elbowLeft->posedTransform_local = Transform2f(Translation2f(-7.5, -3.25));
+	elbowLeft->unposedTransform_local = Transform2f(Translation2f(-5, -7)); // -7.5, -3.25));
+	elbowLeft->posedTransform_local = Transform2f(Translation2f(-5, -7));
 
 	P_Joint handLeft(new Joint);
 	elbowLeft->children.push_back(handLeft);
-	handLeft->unposedTransform_local = Transform2f(Translation2f(-5, -7.75));
-	handLeft->posedTransform_local = Transform2f(Translation2f(-5, -7.75));
+	handLeft->unposedTransform_local = Transform2f(Translation2f(-5, -7.5)); // -5, -7.75));
+	handLeft->posedTransform_local = Transform2f(Translation2f(-5, -7.5));
 	float angle = 1;
 
 
 	P_Joint shoulderRight(new Joint);
 	chest->children.push_back(shoulderRight);
-	shoulderRight->unposedTransform_local = Transform2f(Translation2f(5, -3.25));
-	shoulderRight->posedTransform_local = Transform2f(Translation2f(5, -3.25));
+	shoulderRight->unposedTransform_local = Transform2f(Translation2f(10, -0.5)); // 5, -3.25));
+	shoulderRight->posedTransform_local = Transform2f(Translation2f(10, -0.5));
 
 	P_Joint elbowRight(new Joint);
 	shoulderRight->children.push_back(elbowRight);
-	elbowRight->unposedTransform_local = Transform2f(Translation2f(7.5, -3.25));
-	elbowRight->posedTransform_local = Transform2f(Translation2f(7.5, -3.25));
+	elbowRight->unposedTransform_local = Transform2f(Translation2f(5, -7)); // 7.5, -3.25));
+	elbowRight->posedTransform_local = Transform2f(Translation2f(5, -7));
 
 	P_Joint handRight(new Joint);
 	elbowRight->children.push_back(handRight);
-	handRight->unposedTransform_local = Transform2f(Translation2f(5, -7.75));
-	handRight->posedTransform_local = Transform2f(Translation2f(5, -7.75));
+	handRight->unposedTransform_local = Transform2f(Translation2f(5, -7.5)); // 5, -7.75));
+	handRight->posedTransform_local = Transform2f(Translation2f(5, -7.5));
 
 	P_Joint hipLeft(new Joint);
 	root->children.push_back(hipLeft);
-	hipLeft->unposedTransform_local = Transform2f(Translation2f(-2, -12.5));
-	hipLeft->posedTransform_local = Transform2f(Translation2f(-2, -12.5));
+	hipLeft->unposedTransform_local = Transform2f(Translation2f(-4,-4)); // -2, -12.5));
+	hipLeft->posedTransform_local = Transform2f(Translation2f(-4, -4));
 
 	P_Joint kneeLeft(new Joint);
 	hipLeft->children.push_back(kneeLeft);
-	kneeLeft->unposedTransform_local = Transform2f(Translation2f(-2.5, -7.5));
-	kneeLeft->posedTransform_local = Transform2f(Translation2f(-2.5, -7.5));
+	kneeLeft->unposedTransform_local = Transform2f(Translation2f(-1,-11)); // -2.5, -7.5));
+	kneeLeft->posedTransform_local = Transform2f(Translation2f(-1, -11));
 
 	P_Joint footLeft(new Joint);
 	kneeLeft->children.push_back(footLeft);
-	footLeft->unposedTransform_local = Transform2f(Translation2f(-0.5, -11));
-	footLeft->posedTransform_local = Transform2f(Translation2f(-0.5, -11));
+	footLeft->unposedTransform_local = Transform2f(Translation2f(0, -11)); // -0.5, -11));
+	footLeft->posedTransform_local = Transform2f(Translation2f(0, -11));
 
 	P_Joint hipRight(new Joint);
 	root->children.push_back(hipRight);
-	hipRight->unposedTransform_local = Transform2f(Translation2f(2, -12.5));
-	hipRight->posedTransform_local = Transform2f(Translation2f(2, -12.5));
+	hipRight->unposedTransform_local = Transform2f(Translation2f(4, -4)); // 2, -12.5));
+	hipRight->posedTransform_local = Transform2f(Translation2f(4, -4));
 
 	P_Joint kneeRight(new Joint);
 	hipRight->children.push_back(kneeRight);
-	kneeRight->unposedTransform_local = Transform2f(Translation2f(2.5, -7.5));
-	kneeRight->posedTransform_local = Transform2f(Translation2f(2.5, -7.5));
+	kneeRight->unposedTransform_local = Transform2f(Translation2f(1, -11)); // 2.5, -7.5));
+	kneeRight->posedTransform_local = Transform2f(Translation2f(1, -11));
 
 	P_Joint footRight(new Joint);
 	kneeRight->children.push_back(footRight);
-	footRight->unposedTransform_local = Transform2f(Translation2f(0.5, -11));
-	footRight->posedTransform_local = Transform2f(Translation2f(0.5, -11));
+	footRight->unposedTransform_local = Transform2f(Translation2f(0, -11)); // 0.5, -11));
+	footRight->posedTransform_local = Transform2f(Translation2f(0, -11));
 
+	chest->posedTransform_local.prerotate(-M_PI / 48);
+
+	handRight->posedTransform_local.prerotate(M_PI / 8);
+	handLeft->posedTransform_local.prerotate(M_PI / 8);
+	
+	neck->posedTransform_local.prerotate(M_PI / 16);
+
+	kneeLeft->posedTransform_local.prerotate(-M_PI / 8);
+	footLeft->posedTransform_local.prerotate(M_PI / 8);
+
+	kneeRight->posedTransform_local.prerotate(M_PI / 8);
+	footRight->posedTransform_local.prerotate(-M_PI / 8);
 	Skeleton skeleton(person, root);
+
+	P_Mesh2D posedPerson = skeleton.PosedMesh();
+	P_Mesh2Ds persons;
+	persons.push_back(person);
+	persons.push_back(posedPerson);
+	//persons.push_back(person);
+
+	MeshHelper personMeshHelper(person);
+	for (int i = 0; i < meshCount; i++)
+	{
+		float t = (persons.size() - 1.0) * i * (1.0 / (meshCount - 1));
+		std::cout << t << '\n';
+
+		interpMeshes.push_back(
+			ShapeMorph::Interpolate(
+				persons,
+				t,
+				personMeshHelper,
+				Interpolation::CubicNaturalSplineFunc(true)));
+	}
+
+	P_Mesh2Ds interpMeshesLinear;
+	for (int i = 0; i < meshCount; i++)
+	{
+		float t = (persons.size() - 1.0) * i * (1.0 / (meshCount - 1));
+		
+		interpMeshesLinear.push_back(
+			ShapeMorph::Interpolate(
+				persons,
+				t,
+				personMeshHelper,
+				Interpolation::LinearFunc(true)));
+
+		interpMeshesLinear.back()->Translate(Vector2f(spacing * 3, 0));
+	}
+
+	P_Mesh2Ds interpMeshesBezier;
+
+	VectorXf start(personMeshHelper.GetEdges().cols());
+	VectorXf end(personMeshHelper.GetEdges().cols());
+	//VectorXf controlPointA(meshHelper.GetEdges().cols());
+	//VectorXf controlPointB(meshHelper.GetEdges().cols());
+
+	// cheat to get edge lengths at 0
+	ShapeMorphImpl::InterpolateEdgeLengths(
+		start,
+		personMeshHelper.GetEdges(),
+		persons,
+		0.0,
+		Interpolation::LinearFunc(false));
+	// cheat to get edge lengths at 1
+	ShapeMorphImpl::InterpolateEdgeLengths(
+		end,
+		personMeshHelper.GetEdges(),
+		persons,
+		1.0,
+		Interpolation::LinearFunc(false));
+
+	VectorXf controlDirA = start.normalized(); // controlPointA - start;
+	VectorXf controlDirB = end.normalized(); // controlPointA - end;
+
+	//controlDirA.normalize(); // = controlDirA / controlDirA.norm();
+	//controlDirB.normalize(); // = controlDirB / controlDirB.norm();
+
+	// gram-schmidt
+	controlDirA -= controlDirB * controlDirA.dot(controlDirB);
+	controlDirA.normalize();
+
+	float angleA = 2 * M_PI / 3;
+	float angleB = M_PI / 3;
+	VectorXf controlDirAF = controlDirA * cos(angleA) + controlDirB * sin(angleA);
+	VectorXf controlDirBF = controlDirA * cos(angleB) + controlDirB * sin(angleB);
+
+	Interpolation::InterpolationFunc bezierInterpFunc 
+		= Interpolation::BezierFunc(3 * start + 2 * controlDirAF, 3 * end + 2 * controlDirBF);
+
+	for (int i = 0; i < meshCount; i++)
+	{
+		float t = (persons.size() - 1) * i * (1.0 / (meshCount - 1));
+		std::cout << t << "\n";
+		interpMeshesBezier.push_back(
+			ShapeMorph::Interpolate(
+				persons,
+				t,
+				personMeshHelper,
+				bezierInterpFunc));
+
+		interpMeshesBezier.back()->Translate(Vector2f(spacing * 6, 0));
+	}
+
+
 
 	camera->SetDimensions(width, height);
 	camera->SetDistance(5);
@@ -418,29 +497,30 @@ int main(int argc, char** argv)
 		// head->posedTransform_local.translation() = Rotation2Df(0.01) * head->posedTransform_local.translation(); //.rotate(0.01);
 		// head->posedTransform_local.prerotate(0.01);
 		// head->posedTransform_local = Transform2f(Translation2f(0,12) * Rotation2Df(angle));
-		// handLeft->posedTransform_local.prerotate(-0.01);
+		//handLeft->posedTransform_local.prerotate(-0.01);
 		//handLeft->posedTransform_local = Transform2f(Rotation2Df(angle) * Translation2f(-5, -7.5)); // * ;
 		
 		renderer->Clear();
 
-		// renderer->Render(interpMeshes[meshIndex]);
-		// renderer->Render(interpMeshesLinear[meshIndex]);
-		// meshIndex = (meshIndex + 1) % interpMeshes.size();
+		renderer->Render(interpMeshes[meshIndex]);
+		renderer->Render(interpMeshesLinear[meshIndex]);
+		renderer->Render(interpMeshesBezier[meshIndex]);
+		meshIndex = (meshIndex + 1) % interpMeshes.size();
 
 
 		//renderer->Render(person);
 		
-		renderer->Render(skeleton.PosedMesh());
+		//renderer->Render(skeleton.PosedMesh());
 
-		for (auto &mesh : interpMeshes)
-		{
-			renderer->Render(mesh);
-		}
-		
-		for (auto &mesh : interpMeshesBezier)
-		{
-			renderer->Render(mesh);
-		}
+		//for (auto &mesh : interpMeshes)
+		//{
+		//	renderer->Render(mesh);
+		//}
+		//
+		//for (auto &mesh : interpMeshesBezier)
+		//{
+		//	renderer->Render(mesh);
+		//}
 
 		//float mouseX = mouseManager.GetMouseX();
 		//float mouseY = mouseManager.GetMouseY();

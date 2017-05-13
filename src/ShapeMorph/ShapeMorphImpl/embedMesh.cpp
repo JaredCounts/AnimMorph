@@ -12,7 +12,8 @@ namespace ShapeMorphImpl
 		const VectorXf &edgeLengths,
 		const Matrix3Xi &triangles,
 		const Matrix2Xi &edges,
-		const MeshHelper &meshHelper)
+		const MeshHelper &meshHelper,
+		float firstTriangleAngle)
 	{
 		// std::cout << "embedding\n";
 		// 1. choose a point and direction
@@ -59,6 +60,11 @@ namespace ShapeMorphImpl
 			float x = (Sq(edgeLengthB) + Sq(edgeLengthC) - Sq(edgeLengthA)) / (2 * edgeLengthC);
 			float y = sqrt(Sq(edgeLengthB) - Sq(x));
 			points.col(vertIndexC) = Vector2f(x, y);
+
+			// rotate it to match input angle
+			points.col(vertIndexA) = Rotation2Df(firstTriangleAngle) * points.col(vertIndexA);
+			points.col(vertIndexB) = Rotation2Df(firstTriangleAngle) * points.col(vertIndexB);
+			points.col(vertIndexC) = Rotation2Df(firstTriangleAngle) * points.col(vertIndexC);
 
 			// add all neighboring triangles to queue
 			for (auto &triIndex : meshHelper.TriIndexToAdjTriIndices(0))

@@ -61,13 +61,20 @@ namespace ShapeMorph
 
 		// 3. Embed mesh into 2D Euclidean space
 		// std::cout << "3. embedding mesh.\n";
+		const Vector3i &triangle0 = triangles.col(0);
+		const Vector2f &vertA = meshes.at(0)->GetPoints_Local().col(triangle0[0]);
+		const Vector2f &vertB = meshes.at(0)->GetPoints_Local().col(triangle0[1]);
+		Vector2f diff = (vertB - vertA);
+		float angle = atan2(diff.y(), diff.x());
+
 		Matrix2Xf points = Matrix2Xf::Zero(2, pointCount);
 		ShapeMorphImpl::EmbedMesh(
-			points, 
-			interpEdgeLengths, 
-			triangles, 
-			edges, 
-			meshHelper);
+			points,
+			interpEdgeLengths,
+			triangles,
+			edges,
+			meshHelper,
+			angle);
 
 		return P_Mesh2D(new Mesh2D(points, triangles));
 	}

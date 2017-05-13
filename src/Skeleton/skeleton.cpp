@@ -4,15 +4,18 @@
 
 #include <algorithm>
 
+#include <queue>
+
 Skeleton::Skeleton(const P_Mesh2D unposedMesh, P_Joint rootJoint) :
 	unposedMesh(unposedMesh), rootJoint(rootJoint)
 {
 	// generate joints list
-	std::stack<P_Joint> jointsToAdd;
+	// sorted topologically (root -> children -> children's children -> ...)
+	std::queue<P_Joint> jointsToAdd;
 	jointsToAdd.push(rootJoint);
 	while (jointsToAdd.size() > 0)
 	{
-		P_Joint joint = jointsToAdd.top();
+		P_Joint joint = jointsToAdd.front();
 		jointsToAdd.pop();
 
 		joints.push_back(joint);
@@ -107,22 +110,55 @@ Skeleton::Skeleton(const P_Mesh2D unposedMesh, P_Joint rootJoint) :
 
 		float distBtwnJoints = (jointPositions[closestJointIndex] - jointPositions[closestJointIndex2]).norm();
 
-		float distDiff = closestDistance2 - closestDistance;
-		float cutoff = distBtwnJoints * 0.4;
-		if (distDiff > cutoff)
+		int lowerJointIndex = std::max(closestJointIndex, closestJointIndex2);
+		int upperJointIndex = std::min(closestJointIndex, closestJointIndex2);
+
+		float lowerJointDist = lowerJointIndex == closestJointIndex ? closestDistance : closestDistance2;
+		float upperJointDist = lowerJointIndex == closestJointIndex ? closestDistance2 : closestDistance;
+
+
+		float distDiff = upperJointDist - lowerJointDist;
+		// distDiff goes from [-distBtwnJoints,distBtwnJoints]
+		// to make it easier on us, we'll scale it so that it goes from [0,1]
+
+		float cutoffLower = 0.9; // fraction from upper to lower to "cuttoff" 100% transformation
+		float cutoffUpper = 0;
+		float weightParam = (distDiff + distBtwnJoints) / (2 * distBtwnJoints);
+		
+		if (weightParam > cutoffLower)
 		{
-			vertIndexToJointWeights[vertIndex][closestJointIndex] = 1;
+			vertIndexToJointWeights[vertIndex][lowerJointIndex] = 1;
 		}
 		else
 		{
-			float m = 1 / (2 * cutoff);
-			float b = 1.0 - m * cutoff;
+			float m = 1.0 / (cutoffLower - cutoffUpper);
+			float b = -m * cutoffUpper;
 
-			vertIndexToJointWeights[vertIndex][closestJointIndex] = m * distDiff + b;
-			vertIndexToJointWeights[vertIndex][closestJointIndex2] = 1 - vertIndexToJointWeights[vertIndex][closestJointIndex];
-
-			assert(vertIndexToJointWeights[vertIndex][closestJointIndex] + vertIndexToJointWeights[vertIndex][closestJointIndex2] == 1);
+			vertIndexToJointWeights[vertIndex][lowerJointIndex] = m * weightParam + b;
+			vertIndexToJointWeights[vertIndex][upperJointIndex] = 1.0 - vertIndexToJointWeights[vertIndex][lowerJointIndex];
+			
+			//assert(vertIndexToJointWeights[vertIndex][lowerJointIndex] + vertIndexToJointWeights[vertIndex][upperJointIndex] == 1.0);
 		}
+
+		
+
+
+		//float distDiff = closestDistance2 - closestDistance;
+		//float cutoff = distBtwnJoints * 0.9;
+		//if (distDiff > cutoff)
+		//{
+		//	vertIndexToJointWeights[vertIndex][closestJointIndex] = 1;
+		//}
+		//else
+		//{
+		//	float m = 1 / (2 * cutoff);
+		//	float b = 1.0 - m * cutoff;
+
+		//	vertIndexToJointWeights[vertIndex][closestJointIndex] = m * distDiff + b;
+		//	vertIndexToJointWeights[vertIndex][closestJointIndex2] = 1 - vertIndexToJointWeights[vertIndex][closestJointIndex];
+
+		//	assert(vertIndexToJointWeights[vertIndex][closestJointIndex] + vertIndexToJointWeights[vertIndex][closestJointIndex2] == 1);
+		//}
 
 		//float jointWeightSum = 0;
 		//for (int jointIndex = 0; jointIndex < joints.size(); jointIndex++)

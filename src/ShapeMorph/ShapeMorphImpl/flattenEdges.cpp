@@ -3,6 +3,8 @@
 #include <Eigen/Sparse>
 #include <Eigen/SparseCholesky>
 
+#include "../../Laplacian/laplacian.h"
+
 #include <iostream>
 
 namespace ShapeMorphImpl
@@ -177,85 +179,14 @@ namespace ShapeMorphImpl
 
 			// 2. Generate Energy Hessian
 			// std::cout << "\t2. Generate energy hessian.\n";
-			SparseMatrix<float> energyHessian(coeffCount, coeffCount);
-
-			// first we build a map of edge pairs to laplacian coefficients
-			// then convert those to triplets
-			// then load those into the sparse matrix (acc. to Eigen, this is the best way forward)
-
-			std::unordered_map<UIntPair, float, pairhash> halfLaplacianCoeffs;
-
-			// the energy Hessian is the same as 1/2 the cot-Laplacian of the mesh
-			for (unsigned int triIndex = 0; triIndex < triangleCount; triIndex++)
-			{
-				const Vector3i &triangle = triangles.col(triIndex);
-
-				const unsigned int &vertIndexA = triangle[0];
-				const unsigned int &vertIndexB = triangle[1];
-				const unsigned int &vertIndexC = triangle[2];
-
-				const unsigned int &coeffIndexA = vertIndexToCoeffIndex[vertIndexA];
-				const unsigned int &coeffIndexB = vertIndexToCoeffIndex[vertIndexB];
-				const unsigned int &coeffIndexC = vertIndexToCoeffIndex[vertIndexC];
-
-				const float &triangleAngleA = triangleAngles(0, triIndex);
-				const float &triangleAngleB = triangleAngles(1, triIndex);
-				const float &triangleAngleC = triangleAngles(2, triIndex);
-
-				const float quarterCotAngleA = 0.25 * Cot(triangleAngleA);
-				const float quarterCotAngleB = 0.25 * Cot(triangleAngleB);
-				const float quarterCotAngleC = 0.25 * Cot(triangleAngleC);
-
-
-				if (coeffIndexA != -1 && coeffIndexB != -1)
-				{
-					halfLaplacianCoeffs[UIntPair(coeffIndexA, coeffIndexB)] += -quarterCotAngleC;
-					halfLaplacianCoeffs[UIntPair(coeffIndexB, coeffIndexA)] += -quarterCotAngleC;
-				}
-
-				if (coeffIndexB != -1 && coeffIndexC != -1)
-				{
-					halfLaplacianCoeffs[UIntPair(coeffIndexB, coeffIndexC)] += -quarterCotAngleA;
-					halfLaplacianCoeffs[UIntPair(coeffIndexC, coeffIndexB)] += -quarterCotAngleA;
-				}
-
-				if (coeffIndexA != -1 && coeffIndexC != -1)
-				{
-					halfLaplacianCoeffs[UIntPair(coeffIndexA, coeffIndexC)] += -quarterCotAngleB;
-					halfLaplacianCoeffs[UIntPair(coeffIndexC, coeffIndexA)] += -quarterCotAngleB;
-				}
-
-				if (coeffIndexA != -1)
-				{   // xxx: does this make sense?
-					//      i.e. if vertex B isn't a coeff, 
-					//           should it still contribute to the diagonal here?
-					halfLaplacianCoeffs[UIntPair(coeffIndexA, coeffIndexA)] += quarterCotAngleB + quarterCotAngleC;
-				}
-				if (coeffIndexB != -1)
-				{
-					halfLaplacianCoeffs[UIntPair(coeffIndexB, coeffIndexB)] += quarterCotAngleA + quarterCotAngleC;
-				}
-				if (coeffIndexC != -1)
-				{
-					halfLaplacianCoeffs[UIntPair(coeffIndexC, coeffIndexC)] += quarterCotAngleA + quarterCotAngleB;
-				}
-			}
-
-			typedef std::vector<Triplet<float>> V_Triplets;
-
-			V_Triplets laplacianEntries;
-
-			for (auto &lapEntry : halfLaplacianCoeffs)
-			{
-				const UIntPair &matrixPosition = lapEntry.first;
-				const float &matrixCoeff = lapEntry.second;
-
-				assert(!std::isnan(matrixCoeff) && std::isfinite(matrixCoeff));
-
-				laplacianEntries.push_back(Triplet<float>(matrixPosition.first, matrixPosition.second, matrixCoeff));
-			}
-
-			energyHessian.setFromTriplets(laplacianEntries.begin(), laplacianEntries.end());
+			SparseMatrix<float> energyHessian = 
+				0.5 *
+				Laplacian::CotLaplacian(
+					triangleAngles,
+					triangles,
+					meshHelper,
+					vertIndexToCoeffIndex,
+					coeffCount); //(coeffCount, coeffCount);
 
 			// 3. Update "u" vector 
 			// xxx: side remark, what do we call "u"?

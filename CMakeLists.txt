@@ -17,6 +17,9 @@ set(RAPIDXML_DIR ${CMAKE_SOURCE_DIR}/../../../../Libraries/rapidxml-1.13)
 # Triangle // triangulation
 set(TRIANGLE_DIR ${CMAKE_SOURCE_DIR}/../../../../Libraries/triangle)
 
+# Fast Marching
+set(FASTMARCH_DIR ${CMAKE_SOURCE_DIR}/../../../../Libraries/Toolbox-Fast-Marching-Unix/geoc)
+
 # ==================
 
 # Project name
@@ -117,6 +120,12 @@ find_library( TRIANGLE_LIBRARY NAMES triangle
          )
 
 link_libraries(${TRIANGLE_LIBRARY})
+
+# Fast Marching
+# =============
+include_directories(${FASTMARCH_DIR})
+
+message(STATUS ${FASTMARCH_DIR})
 
 # Install directory
 # =================

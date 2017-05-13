@@ -1,5 +1,7 @@
 #include "skeleton.h"
 
+#include "../Geodesic/geodesic.h"
+
 #include <algorithm>
 
 Skeleton::Skeleton(const P_Mesh2D unposedMesh, P_Joint rootJoint) :
@@ -37,9 +39,37 @@ Skeleton::Skeleton(const P_Mesh2D unposedMesh, P_Joint rootJoint) :
 		jointPositions.push_back(joints[jointIndex]->unposedTransform_global * Vector2f(0, 0));
 	}
 
+	const Matrix2Xf &points = unposedMesh->GetPoints_Local();
+
+	// row -> vertex
+	// column -> joint
+	MatrixXf distancesToJoints(unposedMesh->PointCount(), joints.size());
+	for (int jointIndex = 0; jointIndex < joints.size(); jointIndex++)
+	{
+		const Vector2f &jointPos = jointPositions[jointIndex];
+
+		// need to find nearest vertex to this joint
+		int closestVertIndex = 0;
+		float closestVertDistSq = std::numeric_limits<float>::infinity();
+		for (int vertIndex = 0; vertIndex < unposedMesh->PointCount(); vertIndex++)
+		{
+			const Vector2f &vertex = points.col(vertIndex);
+
+			float distSq = (vertex - jointPos).squaredNorm();
+
+			if (distSq < closestVertDistSq)
+			{
+				closestVertIndex = vertIndex;
+				closestVertDistSq = distSq;
+			}
+		}
+
+		distancesToJoints.col(jointIndex) = Geodesic::DistanceFrom(closestVertIndex, points, unposedMesh->GetTriangles());
+	}
+
+	
 	// compute vertIndexToJointWeights
 	vertIndexToJointWeights = std::vector<std::vector<float>>();
-	const Matrix2Xf &points = unposedMesh->GetPoints_Local();
 	for (int vertIndex = 0; vertIndex < unposedMesh->PointCount(); vertIndex++)
 	{
 		const Vector2f &vertex = points.col(vertIndex);
@@ -57,9 +87,9 @@ Skeleton::Skeleton(const P_Mesh2D unposedMesh, P_Joint rootJoint) :
 		{
 			vertIndexToJointWeights[vertIndex][jointIndex] = 0;
 
-			const Vector2f &jointPos = jointPositions[jointIndex];
+			//const Vector2f &jointPos = jointPositions[jointIndex];
 
-			float distance = (vertex - jointPos).norm();
+			float distance = distancesToJoints(vertIndex, jointIndex); // (vertex - jointPos).norm();
 			if (distance < closestDistance)
 			{
 				closestDistance2 = closestDistance;
@@ -78,18 +108,14 @@ Skeleton::Skeleton(const P_Mesh2D unposedMesh, P_Joint rootJoint) :
 		float distBtwnJoints = (jointPositions[closestJointIndex] - jointPositions[closestJointIndex2]).norm();
 
 		float distDiff = closestDistance2 - closestDistance;
-		float cutoff = distBtwnJoints * 0.3;
-		//float cutoff = 0.3;
-		//float distRatio = closestDistance / (closestDistance + closestDistance2);
+		float cutoff = distBtwnJoints * 0.4;
 		if (distDiff > cutoff)
 		{
 			vertIndexToJointWeights[vertIndex][closestJointIndex] = 1;
 		}
 		else
 		{
-			//float m = 1.0 / (cutoff - 1.0); //1 / (2 * cutoff - 1);dfdsafsdf
-			//float b = -m; // 1 - m * cutoff;
-			float m = 1 / (2 * cutoff); // 1.0 / (2.0 * (cutoff - distBtwnJoints)); ;//1.0 / (2.0 * cutoff - 1.0);
+			float m = 1 / (2 * cutoff);
 			float b = 1.0 - m * cutoff;
 
 			vertIndexToJointWeights[vertIndex][closestJointIndex] = m * distDiff + b;

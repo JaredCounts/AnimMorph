@@ -146,7 +146,7 @@ int main(int argc, char** argv)
 	std::cout << "start\n";
 	auto t0 = Time::now();
 
-	//P_Mesh2Ds interpMeshes;
+	P_Mesh2Ds interpMeshes;
 	//for (int i = 0; i < meshCount; i++)
 	//{
 	//	float t = (meshes.size()-1) * i * (1.0 / (meshCount - 1));
@@ -199,12 +199,12 @@ int main(int argc, char** argv)
 	//	meshes,
 	//	0.9,
 	//	Interpolation::CubicNaturalSplineFunc(false));
-	ShapeMorphImpl::InterpolateEdgeLengths(
-		end,
-		meshHelper.GetEdges(),
-		meshes,
-		1,
-		Interpolation::CubicNaturalSplineFunc(false));
+	//ShapeMorphImpl::InterpolateEdgeLengths(
+	//	end,
+	//	meshHelper.GetEdges(),
+	//	meshes,
+	//	1,
+	//	Interpolation::CubicNaturalSplineFunc(false));
 
 	// float length = controlPointA.norm();
 
@@ -328,9 +328,7 @@ int main(int argc, char** argv)
 	footRight->unposedTransform_local = Transform2f(Translation2f(0.5, -11));
 	footRight->posedTransform_local = Transform2f(Translation2f(0.5, -11));
 
-
 	Skeleton skeleton(person, root);
-
 
 	camera->SetDimensions(width, height);
 	camera->SetDistance(5);
@@ -420,7 +418,7 @@ int main(int argc, char** argv)
 		// head->posedTransform_local.translation() = Rotation2Df(0.01) * head->posedTransform_local.translation(); //.rotate(0.01);
 		// head->posedTransform_local.prerotate(0.01);
 		// head->posedTransform_local = Transform2f(Translation2f(0,12) * Rotation2Df(angle));
-		elbowLeft->posedTransform_local.prerotate(-0.01);
+		// handLeft->posedTransform_local.prerotate(-0.01);
 		//handLeft->posedTransform_local = Transform2f(Rotation2Df(angle) * Translation2f(-5, -7.5)); // * ;
 		
 		renderer->Clear();
@@ -434,10 +432,10 @@ int main(int argc, char** argv)
 		
 		renderer->Render(skeleton.PosedMesh());
 
-		//for (auto &mesh : interpMeshes)
-		//{
-		//	renderer->Render(mesh);
-		//}
+		for (auto &mesh : interpMeshes)
+		{
+			renderer->Render(mesh);
+		}
 		
 		for (auto &mesh : interpMeshesBezier)
 		{

@@ -5,6 +5,8 @@
 #include "joint.h"
 #include "../Mesh2D/mesh2D.h"
 
+#include "../Mesh2D/meshHelper.h"
+
 #include <stack>
 
 class Skeleton

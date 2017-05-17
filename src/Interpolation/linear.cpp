@@ -12,7 +12,7 @@ namespace Interpolation
 		int tIndex = 0;
 		if (closed)
 		{
-			tIndex = (int)t % pieceCount;
+			tIndex = (int)(std::floor(t)) % pieceCount;
 		}
 		else
 		{

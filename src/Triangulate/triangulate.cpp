@@ -21,7 +21,7 @@ namespace Triangulate
 		const Matrix2Xi &edges,
 		const Matrix2Xf &vertices)
 	{
-		std::string full_flags = "a1.0qpz";
+		std::string full_flags = "a2.0qpz";
 
 		typedef Map< Matrix<double, Dynamic, Dynamic, ColMajor> > MapXdr;
 		typedef Map< Matrix<int, Dynamic, Dynamic, ColMajor> > MapXir;

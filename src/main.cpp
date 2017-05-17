@@ -205,8 +205,8 @@ int main(int argc, char** argv)
 	cout << "GL_SHADING_LANGUAGE_VERSION : " << glGetString(GL_SHADING_LANGUAGE_VERSION) << endl;
 
 	P_Mesh2D mesh(new Mesh2D());
-	int trussWidth = 50;
-	float trussHeight = 5;
+	int trussWidth = 75;
+	float trussHeight = 10;
 	for (unsigned int j = 0; j < trussHeight; j++)
 	{
 		for (unsigned int i = 0; i < trussWidth; i++)
@@ -266,7 +266,7 @@ int main(int argc, char** argv)
 		}
 	}
 
-	float spacing = 75;
+	float spacing = 90;
 	//mesh->Translate(Vector2f(0, 0));
 	//mesh2->Translate(Vector2f(0, 50));
 	//mesh3->Translate(Vector2f(0, 100));
@@ -302,6 +302,9 @@ int main(int argc, char** argv)
 		mesh->Translate(Vector2f(spacing * (i % 5), -spacing * (i / 5)));
 		i++;
 	}
+	interpMeshes[0]->color = Vector3f(1.0, 0.0, 0.0);
+	interpMeshes[interpMeshes.size() / 2]->color = Vector3f(0.0, 1.0, 0.0);
+	interpMeshes.back()->color = Vector3f(0.0, 0.0, 1.0);
 
 	//P_Mesh2Ds interpMeshesLinear =
 	//	MakeInterpMeshes(
@@ -640,6 +643,7 @@ int main(int argc, char** argv)
 		GLenum err;
 		while ((err = glGetError()) != GL_NO_ERROR) {
 			std::cerr << "OpenGL error: " << err << std::endl;
+			assert(false);
 		}
 
 	}

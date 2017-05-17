@@ -26,15 +26,27 @@ private:
 
 	void CheckStatus(GLuint obj)
 	{
+		GLenum err;
+		while ((err = glGetError()) != GL_NO_ERROR) {
+			assert(false);
+			std::cerr << "OpenGL error: " << err << std::endl;
+		}
+
 		GLint status = GL_FALSE;
 		if (glIsShader(obj)) glGetShaderiv(obj, GL_COMPILE_STATUS, &status);
 		if (glIsProgram(obj)) glGetProgramiv(obj, GL_LINK_STATUS, &status);
 		if (status == GL_TRUE) return;
+
 		GLchar log[1 << 16] = { 0 };
-		if (glIsShader(obj)) glGetShaderInfoLog(obj, sizeof(log), NULL, log);
-		if (glIsProgram(obj)) glGetProgramInfoLog(obj, sizeof(log), NULL, log);
+		if (glIsShader(obj)) 
+			glGetShaderInfoLog(obj, sizeof(log), NULL, log);
+		if (glIsProgram(obj)) 
+			glGetProgramInfoLog(obj, sizeof(log), NULL, log);
 		std::cerr << log << std::endl;
-		exit(-1);
+		
+		assert(false);
+
+		//exit(-1);
 	}
 
 	void AttachShader(GLuint program, GLenum type, const char* src)
@@ -51,7 +63,7 @@ private:
 	{
 		GLuint prog = glCreateProgram();
 		if (vert) AttachShader(prog, GL_VERTEX_SHADER, vert);
-		if (geom) AttachShader(prog, GL_GEOMETRY_SHADER, geom);
+		//if (geom != NULL) AttachShader(prog, GL_GEOMETRY_SHADER, geom);
 		if (frag) AttachShader(prog, GL_FRAGMENT_SHADER, frag);
 		glLinkProgram(prog);
 		CheckStatus(prog);

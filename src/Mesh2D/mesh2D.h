@@ -31,6 +31,8 @@ public:
 
 	const Transform2f &GetTransform() const;
 
+	Vector3f color;
+
 private:
 	// geometry
 	// each column contains 2 coordinate values

@@ -10,21 +10,24 @@
 Mesh2D::Mesh2D(const Mesh2D & mesh) :
 	points(mesh.GetPoints_Local()),
 	triangles(mesh.GetTriangles()),
-	transform(mesh.GetTransform())
+	transform(mesh.GetTransform()),
+	color(0.0, 0.0, 0.0)
 {
 }
 
 Mesh2D::Mesh2D(Matrix2Xf points, Matrix3Xi triangles) :
 	points(points),
 	triangles(triangles),
-	transform(Translation2f(0,0))
+	transform(Translation2f(0,0)),
+	color(0.0, 0.0, 0.0)
 {
 }
 
 Mesh2D::Mesh2D() :
 	points(),
 	triangles(),
-	transform(Translation2f(0,0))
+	transform(Translation2f(0,0)),
+	color(0.0, 0.0, 0.0)
 {
 }
 

@@ -24,7 +24,7 @@ void Renderer::ReshapeDisplay(int width, int height)
 
 void Renderer::Clear()
 {
-	glClearColor(0, 0, 0, 0);
+	glClearColor(1, 1, 1, 0);
 	glClear(GL_COLOR_BUFFER_BIT);
 }
 
@@ -37,56 +37,111 @@ void Renderer::Render(const P_Mesh2D &mesh)
 	const Matrix2Xf points = mesh->GetPoints_World();
 	const Matrix3Xi triangles = mesh->GetTriangles();
 
+	Matrix3Xf colors(3, points.cols());
+	for (int i = 0; i < points.cols(); i++)
+	{
+		colors.col(i) = mesh->color;
+	}
+
 	const char* vert = GLSL
 	(
-		410 core,
+		330 core,
+
 		layout(location = 0) in vec2 position;
-		
+		layout(location = 1) in vec3 vertexColor;
+
+		out vec3 fragmentColor;
+
 		uniform mat4 modelViewProjection;
 
 		void main()
 		{
 			gl_Position = modelViewProjection * vec4(position, 0.0, 1.0);
+			
+			fragmentColor = vertexColor;
 		}
 	);
 
 	const char* frag = GLSL
 	(
-		410 core,
-		out vec4 FragColor;
+		330 core,
+
+		in vec3 fragmentColor;
+	
+		out vec3 color;
+		
 		void main()
 		{
-			FragColor = vec4(0.6, 1.0, 1.0, 1.0);
+			color = fragmentColor;
 		}
 	);
-
-	GLuint program = LoadProgram(vert, NULL, frag);
 
 	GLuint VAO;
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
+	//CheckStatus(VAO);
 
-	GLuint vertex_buffer = 0;
+	GLuint program = LoadProgram(vert, NULL, frag);
+	//CheckStatus(program);
+
+	// vertices
+	GLuint vertex_buffer;
 	glGenBuffers(1, &vertex_buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+	glBufferData(GL_ARRAY_BUFFER, 
+		points.size() * sizeof(float), 
+		points.data(), 
+		GL_STATIC_DRAW);
+	//CheckStatus(vertex_buffer);
 
-	glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(float), points.data(), GL_STATIC_DRAW);
+	// colors
+	GLuint color_buffer;
+	glGenBuffers(1, &color_buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, color_buffer);
+	glBufferData(GL_ARRAY_BUFFER, 
+		colors.size() * sizeof(float), 
+		colors.data(), 
+		GL_STATIC_DRAW);
+	//CheckStatus(color_buffer);
 
+	// triangles
 	GLuint index_buffer = 0;
 	glGenBuffers(1, &index_buffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
 
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, triangles.size() * sizeof(int), triangles.data(), GL_STATIC_DRAW);
-
-	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-	glBindVertexArray(0);
-
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 
+		triangles.size() * sizeof(int), 
+		triangles.data(), 
+		GL_STATIC_DRAW);
+	//CheckStatus(index_buffer);
 
 	glUseProgram(program);
+
+	// configure vertices
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	//glBindVertexArray(0);
+	//CheckStatus(vertex_buffer);
+
+	// configure colors
+	glEnableVertexAttribArray(1);
+	glBindBuffer(GL_ARRAY_BUFFER, color_buffer);
+	glVertexAttribPointer(
+		1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
+		3,                                // size
+		GL_FLOAT,                         // type
+		GL_FALSE,                         // normalized?
+		0,                                // stride
+		(void*)0                          // array buffer offset
+	);
+	//glBindVertexArray(0);
+	//CheckStatus(color_buffer);
+
+	// set index buffer
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	// Get a handle for our "MVP" uniform
 	GLuint matrixID = glGetUniformLocation(program, "modelViewProjection");
@@ -101,16 +156,19 @@ void Renderer::Render(const P_Mesh2D &mesh)
 	// in the "MVP" uniform
 	glUniformMatrix4fv(matrixID, 1, GL_FALSE, modelViewProjection.data());
 
+	//glBindVertexArray(VAO);
+	glDrawElements(GL_TRIANGLES, triangles.size(), GL_UNSIGNED_INT, 0);
+	//glBindVertexArray(0);
+	
+	glDisableVertexAttribArray(0);
+	glDisableVertexAttribArray(1);
 
-	glBindVertexArray(VAO);
-	glDrawElements(GL_TRIANGLES, 3 * triangles.size(), GL_UNSIGNED_INT, 0);
-	glBindVertexArray(0);
-
-
-	glDeleteBuffers(1, &vertex_buffer);
 	glDeleteBuffers(1, &index_buffer);
-	glDeleteProgram(program);
-	glDeleteVertexArrays(1, &VAO);
+	glDeleteBuffers(1, &vertex_buffer);
+	glDeleteBuffers(1, &color_buffer);
 
+	glDeleteProgram(program);
+
+	glDeleteVertexArrays(1, &VAO);
 }
 

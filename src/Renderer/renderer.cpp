@@ -1,5 +1,8 @@
 #include "renderer.h"
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 Renderer::Renderer(P_Camera camera) :
 	camera(camera)
 {
@@ -26,6 +29,20 @@ void Renderer::Clear()
 {
 	glClearColor(1, 1, 1, 0);
 	glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void Renderer::SaveScreen(const char * filename) const
+{
+	int width = camera->GetWidth();
+	int height = camera->GetHeight();
+
+	std::vector<uint8_t> buffer;
+	buffer.resize(width * height * 3);
+
+	glPixelStorei(GL_PACK_ALIGNMENT, 1);
+	glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, &buffer[0]);
+
+	stbi_write_png(filename, width, height, 3, &buffer[0], width * 3);
 }
 
 #define GLSL(version, shader) "#version " #version "\n" #shader

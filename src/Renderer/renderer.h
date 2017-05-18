@@ -20,6 +20,8 @@ public:
 	void Clear();
 
 	void Render(const P_Mesh2D &mesh);
+	
+	void SaveScreen(const char* filename) const;
 
 private:
 	P_Camera camera;

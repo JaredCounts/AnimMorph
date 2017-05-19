@@ -16,15 +16,14 @@ Some planned contributions:
 * Add toggleable 2D mode to Camera
 * Would be nice if we shared libraries with my other project (e.g., Camera, Mouseable, etc. were copy pasted from elsewhere)
 * Separate window logic from loop logic
-* Mesh loading
 * Texturing
 * Convert texture to mesh
-* Embed mesh so it has the same relative orientation as original mesh.
+* Separate topology representation from Mesh class
 * Clean up Shape morph code
-	* Separate out some kind of MeshHelper for efficiently mapping vertices to edges, edges to triangles, etc.
 	* Optimizations?
 		* For instance, all topological math can be done only once.
 		* Profiling (memory and time)
-* B-spline mesh interpolation
-* Mesh posing
-* Mesh animating
+* UI
+	* Improve mesh posing
+	* Add handles for editing the Bezier motion
+	

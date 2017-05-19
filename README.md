@@ -11,9 +11,7 @@ In this project, I explore the possibilities of using typical interpolation and 
 
 In the above screenshot, I show a comparison between Chen, et al's interpolation of a mesh (top) between three keyframes (red, green, and blue) and my natural cubic based interpolation (bottom).
 
-
 ![Bezier A](results/bezier-angleA.PNG)
-![Bezier B](results/bezier-angleB.PNG)
 
 Above we see a bezier interpolation between two meshes, and ways this interpolation may be changed using the bezier control points.
 

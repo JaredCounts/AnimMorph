@@ -3,16 +3,23 @@
 ## Intro
 Project for Professor Justin Solomon's MIT class, Shape Analysis (6.838).
 
-Implementation of Chen, Weber, Keren, and Ben-Chen's "Planar Shape Interpolation with Bounded Distortion."
+Implementation of Chen, Weber, Keren, and Ben-Chen's paper, "Planar Shape Interpolation with Bounded Distortion" with some contributions.
 
-Some planned contributions:
-	1. Smooth B-spline mesh interpolations
-	2. Intuitive UI
-	3. Animation tools
+In this project, I explore the possibilities of using typical interpolation and spline methods in the context of shape interpolation.
 
-- Jared Counts
+[Linear vs Cubic](results/linear-vs-cubic.PNG)
+
+In the above screenshot, I show a comparison between Chen, et al's interpolation of a mesh (top) between three keyframes (red, green, and blue) and my natural cubic based interpolation (bottom).
+
+
+[Bezier A](results/bezier-angleA.PNG)
+[Bezier B](results/bezier-angleB.PNG)
+
+Above we see a bezier interpolation between two meshes, and ways this interpolation may be changed using the bezier control points.
 
 ## Todo
+* Clean up CMake (what is the proper way to import libraries?)
+* Wrap up shape morphing code into a library
 * Add toggleable 2D mode to Camera
 * Would be nice if we shared libraries with my other project (e.g., Camera, Mouseable, etc. were copy pasted from elsewhere)
 * Separate window logic from loop logic

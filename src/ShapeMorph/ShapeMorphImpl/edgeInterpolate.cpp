@@ -42,6 +42,9 @@ namespace ShapeMorphImpl
 
 		for (unsigned int i = 0; i < edgeCount; i++)
 		{
+			assert(interpEdgeLengths[i] > 0);
+			assert(!std::isnan(interpEdgeLengths[i]));
+			assert(std::isfinite(interpEdgeLengths[i]));
 			interpEdgeLengths[i] = sqrt(interpEdgeLengths[i]);
 
 			assert(interpEdgeLengths[i] != 0);

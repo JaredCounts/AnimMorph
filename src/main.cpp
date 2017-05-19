@@ -185,7 +185,7 @@ int main(int argc, char** argv)
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	int width = 1080, height = 720;
+	int width = 1920, height = 1080;
 
 	GLFWwindow* window = glfwCreateWindow(width, height, "Hello window", NULL, NULL);
 	if (!window)
@@ -278,9 +278,9 @@ int main(int argc, char** argv)
 	meshes.push_back(mesh);
 	meshes.push_back(mesh2);
 	meshes.push_back(mesh3);
-	//meshes.push_back(mesh);
+	meshes.push_back(mesh);
 
-	int meshCount = 15;
+	int meshCount = 400;
 
 	typedef std::chrono::high_resolution_clock Time;
 	typedef std::chrono::milliseconds ms;
@@ -296,42 +296,53 @@ int main(int argc, char** argv)
 			meshCount,
 			Interpolation::CubicNaturalSplineFunc(true));
 
-	int i = 0;
-	for (auto &mesh : interpMeshes)
-	{
-		mesh->Translate(Vector2f(spacing * (i % 5), -spacing * (i / 5)));
-		i++;
-	}
-	interpMeshes[0]->color = Vector3f(1.0, 0.0, 0.0);
-	interpMeshes[interpMeshes.size() / 2]->color = Vector3f(0.0, 1.0, 0.0);
-	interpMeshes.back()->color = Vector3f(0.0, 0.0, 1.0);
-
-	//P_Mesh2Ds interpMeshesLinear =
-	//	MakeInterpMeshes(
-	//		meshes,
-	//		meshHelper,
-	//		meshCount,
-	//		Interpolation::LinearFunc(true));
 	//int i = 0;
-	//for (auto &mesh : interpMeshesLinear)
+	//for (auto &mesh : interpMeshes)
 	//{
+	//	mesh->Translate(Vector2f(spacing * i, 0));
 	//	i++;
-	//	mesh->Translate(Vector2f(spacing * (i % 4), spacing * (i / 4)));
 	//}
+	//interpMeshes[0]->color = Vector3f(1.0, 0.0, 0.0);
+	//interpMeshes[interpMeshes.size() / 2]->color = Vector3f(0.0, 1.0, 0.0);
+	//interpMeshes.back()->color = Vector3f(0.0, 0.0, 1.0);
 
+	P_Mesh2Ds interpMeshesLinear =
+		MakeInterpMeshes(
+			meshes,
+			meshHelper,
+			meshCount,
+			Interpolation::LinearFunc(true));
+	//i = 0;
+	for (auto &mesh : interpMeshesLinear)
+	{
+		mesh->Translate(Vector2f(spacing, 0)); // * i, spacing
+		//i++;
+	}
+	//interpMeshesLinear[0]->color = Vector3f(1.0, 0.0, 0.0);
+	//interpMeshesLinear[interpMeshesLinear.size() / 2]->color = Vector3f(0.0, 1.0, 0.0);
+	//interpMeshesLinear.back()->color = Vector3f(0.0, 0.0, 1.0);
 
-	//P_Mesh2Ds interpMeshesBezier;
 
 	//VectorXf start(meshHelper.GetEdges().cols());
 	////VectorXf controlPointA(meshHelper.GetEdges().cols());
 	////VectorXf controlPointB(meshHelper.GetEdges().cols());
 	//VectorXf end(meshHelper.GetEdges().cols());
 
+	//start = start.array().pow(2).matrix();
+	//end = end.array().pow(2).matrix();
+
 	//ShapeMorphImpl::InterpolateEdgeLengths(
 	//	start,
 	//	meshHelper.GetEdges(),
 	//	meshes,
 	//	0,
+	//	Interpolation::CubicNaturalSplineFunc(false));
+
+	//ShapeMorphImpl::InterpolateEdgeLengths(
+	//	end,
+	//	meshHelper.GetEdges(),
+	//	meshes,
+	//	1.0,
 	//	Interpolation::CubicNaturalSplineFunc(false));
 
 	//VectorXf controlDirA = start; // controlPointA - start;
@@ -342,25 +353,31 @@ int main(int argc, char** argv)
 	//controlDirA = controlDirA / controlDirA.norm();
 	//controlDirB = controlDirB / controlDirB.norm();
 
-	//float angleA = M_PI / 3;
-	//float angleB = 2 * M_PI / 3;
-	//VectorXf controlDirAF = controlDirA * cos(angleA) + controlDirB * sin(angleB);
-	//VectorXf controlDirBF = controlDirA * cos(angleB) + controlDirB * sin(angleB);
-
-	//Interpolation::InterpolationFunc bezierInterpFunc = Interpolation::BezierFunc(start + controlDirAF, end + controlDirBF);
-
-	//for (int i = 0; i < meshCount; i++)
+	//P_Mesh2Ds interpMeshesBezier;
+	//int angleCount = 7;
+	//for (int j = 0; j < angleCount; j++)
 	//{
-	//	float t = (meshes.size() - 1) * i * (1.0 / (meshCount - 1));
-	//	std::cout << t << '\n';
-	//	interpMeshesBezier.push_back(
-	//		ShapeMorph::Interpolate(
-	//			meshes,
-	//			t,
-	//			meshHelper,
-	//			bezierInterpFunc));
+	//	float angle = j * M_PI / angleCount;
 
-	//	interpMeshesBezier.back()->Translate(Vector2f(spacing * i, 0));
+	//	float angleA = angle;
+	//	float angleB = M_PI;
+	//	VectorXf controlDirAF = controlDirA * cos(angleA) + controlDirB * sin(angleB);
+	//	VectorXf controlDirBF = controlDirA * cos(angleB) + controlDirB * sin(angleB);
+
+	//	Interpolation::InterpolationFunc bezierInterpFunc =
+	//		Interpolation::BezierFunc(start + 10 * controlDirAF, end + 10 * controlDirBF);
+
+	//	P_Mesh2Ds bezierAngleMeshes = MakeInterpMeshes(meshes, meshHelper, meshCount, bezierInterpFunc);
+
+	//	bezierAngleMeshes[0]->color = Vector3f(1.0, 0.0, 0.0);
+	//	bezierAngleMeshes.back()->color = Vector3f(0.0, 0.0, 1.0);
+	//	int i = 0;
+	//	for (auto &mesh : bezierAngleMeshes)
+	//	{
+	//		mesh->Translate(Vector2f(spacing * i, spacing * j));
+	//		interpMeshesBezier.push_back(mesh);
+	//		i++;
+	//	}
 	//}
 
 	auto t1 = Time::now();
@@ -377,18 +394,79 @@ int main(int argc, char** argv)
 
 	joints.chest->posedTransform_local.prerotate(M_PI / 24);
 
-	joints.handRight->posedTransform_local.prerotate(-2 * M_PI / 3);
-	joints.handLeft->posedTransform_local.prerotate(M_PI / 4);
+	joints.handRight->posedTransform_local.prerotate(-M_PI / 6);
+	joints.handLeft->posedTransform_local.prerotate(M_PI / 8);
 
 	joints.neck->posedTransform_local.prerotate(M_PI / 48);
 
-	joints.kneeLeft->posedTransform_local.prerotate(M_PI / 8);
+	joints.kneeLeft->posedTransform_local.prerotate(-M_PI / 8);
 	joints.footLeft->posedTransform_local.prerotate(M_PI / 8);
 
-	joints.kneeRight->posedTransform_local.prerotate(M_PI / 16);
+	joints.kneeRight->posedTransform_local.prerotate(-M_PI / 16);
 	joints.footRight->posedTransform_local.prerotate(M_PI / 8);
 
 	P_Mesh2D posedPerson2 = skeleton.PosedMesh();
+
+	joints.chest->posedTransform_local.prerotate(-M_PI / 12);
+
+	joints.handRight->posedTransform_local.prerotate(M_PI / 4);
+	joints.handLeft->posedTransform_local.prerotate(-M_PI / 8);
+
+	joints.neck->posedTransform_local.prerotate(-M_PI / 24);
+
+	//joints.kneeLeft->posedTransform_local.prerotate(-M_PI / 8);
+	joints.footLeft->posedTransform_local.prerotate(M_PI / 24);
+
+	joints.kneeRight->posedTransform_local.prerotate(M_PI / 8);
+	joints.footRight->posedTransform_local.prerotate(-M_PI / 8);
+
+	P_Mesh2D posedPerson3 = skeleton.PosedMesh();
+	posedPerson->Translate(Vector2f(spacing * 1, 0));
+	posedPerson2->Translate(Vector2f(spacing * 2, 0));
+	posedPerson3->Translate(Vector2f(spacing * 3, 0));
+
+	MeshHelper personMeshHelper(person);
+
+	P_Mesh2Ds persons;
+	//persons.push_back(person);
+	persons.push_back(posedPerson);
+	persons.push_back(posedPerson2);
+	//persons.push_back(posedPerson3);
+
+	//P_Mesh2Ds interpMeshes =
+	//	MakeInterpMeshes(
+	//		persons,
+	//		personMeshHelper,
+	//		meshCount,
+	//		Interpolation::CubicNaturalSplineFunc(true));
+
+	//int i = 0;
+	//for (auto &mesh : interpMeshes)
+	//{
+	//	mesh->Translate(Vector2f(spacing * i, 0));
+	//	i++;
+	//}
+	//interpMeshes[0]->color = Vector3f(1.0, 0.0, 0.0);
+	//interpMeshes[interpMeshes.size() / 2]->color = Vector3f(0.0, 1.0, 0.0);
+	//interpMeshes.back()->color = Vector3f(0.0, 0.0, 1.0);
+
+	//P_Mesh2Ds interpMeshesLinear  =
+	//	MakeInterpMeshes(
+	//		persons,
+	//		personMeshHelper,
+	//		meshCount,
+	//		Interpolation::LinearFunc(true));
+
+	//i = 0;
+	//for (auto &mesh : interpMeshesLinear)
+	//{
+	//	mesh->Translate(Vector2f(spacing * i, spacing));
+	//	i++;
+	//}
+	//interpMeshesLinear[0]->color = Vector3f(1.0, 0.0, 0.0);
+	//interpMeshesLinear[interpMeshesLinear.size() / 2]->color = Vector3f(0.0, 1.0, 0.0);
+	//interpMeshesLinear.back()->color = Vector3f(0.0, 0.0, 1.0);
+
 
 	//P_Mesh2Ds persons;
 	//persons.push_back(person);
@@ -448,6 +526,10 @@ int main(int argc, char** argv)
 	//	1.0,
 	//	Interpolation::LinearFunc(false));
 
+	//// square
+	//start = start.array().pow(2).matrix();
+	//end = end.array().pow(2).matrix();
+
 	//VectorXf controlDirA = start.normalized(); // controlPointA - start;
 	//VectorXf controlDirB = end.normalized(); // controlPointA - end;
 
@@ -458,33 +540,46 @@ int main(int argc, char** argv)
 	//controlDirA -= controlDirB * controlDirA.dot(controlDirB);
 	//controlDirA.normalize();
 
-	//float angleA = 2 * M_PI / 3;
-	//float angleB = M_PI / 3;
+
+	//float angleA = 2 * M_PI / 3 + M_PI/2;
+	//float angleB = M_PI / 3 + M_PI / 2;
 	//VectorXf controlDirAF = controlDirA * cos(angleA) + controlDirB * sin(angleA);
 	//VectorXf controlDirBF = controlDirA * cos(angleB) + controlDirB * sin(angleB);
 
 	//Interpolation::InterpolationFunc bezierInterpFunc 
-	//	= Interpolation::BezierFunc(3 * start + 2 * controlDirAF, 3 * end + 2 * controlDirBF);
+	//	= Interpolation::BezierFunc(start + 4 * controlDirAF, end + 4 * controlDirBF);
 
-	//for (int i = 0; i < meshCount; i++)
+	//interpMeshesBezier = MakeInterpMeshes(persons, personMeshHelper, meshCount, bezierInterpFunc);
+
+	//int i = 0;
+	//for (auto &mesh : interpMeshesBezier)
 	//{
-	//	float t = (persons.size() - 1) * i * (1.0 / (meshCount - 1));
-	//	std::cout << t << "\n";
-	//	interpMeshesBezier.push_back(
-	//		ShapeMorph::Interpolate(
-	//			persons,
-	//			t,
-	//			personMeshHelper,
-	//			bezierInterpFunc));
-
-	//	interpMeshesBezier.back()->Translate(Vector2f(spacing * 6, 0));
+	//	mesh->Translate(Vector2f(spacing * i, spacing));
+	//	i++;
 	//}
+	//interpMeshesBezier[0]->color = Vector3f(1.0, 0.0, 0.0);
+	//interpMeshesBezier.back()->color = Vector3f(0.0, 0.0, 1.0);
+
+/*
+	for (int i = 0; i < meshCount; i++)
+	{
+		float t = (persons.size() - 1) * i * (1.0 / (meshCount - 1));
+		std::cout << t << "\n";
+		interpMeshesBezier.push_back(
+			ShapeMorph::Interpolate(
+				persons,
+				t,
+				personMeshHelper,
+				bezierInterpFunc));
+
+		interpMeshesBezier.back()->Translate(Vector2f(spacing * 6, 0));
+	}*/
 
 
 
 	camera->SetDimensions(width, height);
-	camera->SetDistance(5);
-	camera->SetCenter(Vector3f::Zero());
+	camera->SetDistance(130);
+	camera->SetCenter(Vector3f(22,-15,0));
 
 	renderer->Init();
 
@@ -495,7 +590,7 @@ int main(int argc, char** argv)
 		// determine mouse state
 		if (action == GLFW_PRESS)
 		{
-			std::cout << camera->GetPointWorld(Vector2f(mouseManager.GetMouseX(), mouseManager.GetMouseY())) << "\n\n";
+			std::cout << "Camera distance:\n" << camera->GetDistance() << "\nCamera center:\n" << camera->GetCenter() << "\n\n";
 			switch (button)
 			{
 			case GLFW_MOUSE_BUTTON_LEFT:
@@ -561,11 +656,16 @@ int main(int argc, char** argv)
 
 	glfwSetWindowSizeCallback(window, windowResizeFunction);
 
+	
 	int meshIndex = 0;
+	int frame = 0;
+	float angle = 0;
 	// Check if the ESC key was pressed or the window was closed
 	while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
 		glfwWindowShouldClose(window) == 0)
 	{
+		angle += 0.04;
+		meshIndex++;
 		// head->posedTransform_local.translation() = Rotation2Df(0.01) * head->posedTransform_local.translation(); //.rotate(0.01);
 		// head->posedTransform_local.prerotate(0.01);
 		// head->posedTransform_local = Transform2f(Translation2f(0,12) * Rotation2Df(angle));
@@ -574,25 +674,29 @@ int main(int argc, char** argv)
 		
 		renderer->Clear();
 
-		//renderer->Render(interpMeshes[meshIndex]);
-		//renderer->Render(interpMeshesLinear[meshIndex]);
-		// renderer->Render(interpMeshesBezier[meshIndex]);
+		renderer->Render(interpMeshes[meshIndex % interpMeshes.size()]);
+		renderer->Render(interpMeshesLinear[meshIndex % interpMeshesLinear.size()]);
+		//renderer->Render(interpMeshesBezier[meshIndex]);
 		//meshIndex = (meshIndex + 1) % interpMeshes.size();
 
 
 		//renderer->Render(person);
+		//renderer->Render(posedPerson);
+		//renderer->Render(posedPerson2);
+		//renderer->Render(posedPerson3);
 		
 		//renderer->Render(skeleton.PosedMesh());
 
-		for (auto &mesh : interpMeshes)
-		{
-			renderer->Render(mesh);
-		}
+		//for (auto &mesh : interpMeshes)
+		//{
+		//	renderer->Render(mesh);
+		//}
+
 		//for (auto &mesh : interpMeshesLinear)
 		//{
 		//	renderer->Render(mesh);
 		//}
-		
+
 		//for (auto &mesh : interpMeshesBezier)
 		//{
 		//	renderer->Render(mesh);
@@ -634,6 +738,19 @@ int main(int argc, char** argv)
 
 		//renderer->Render(mesh3);
 
+		//char filename[50];
+
+		//std::sprintf(filename, "frames/frame%04d.png", frame);
+		//frame += 1;
+		//std::cout << filename << std::endl;
+
+		//renderer->SaveScreen(filename);
+
+		//if (frame == 1200)
+		//{
+		//	break;
+		//}
+
 		glfwSwapBuffers(window);
 
 		glfwPollEvents();
@@ -645,6 +762,8 @@ int main(int argc, char** argv)
 			std::cerr << "OpenGL error: " << err << std::endl;
 			assert(false);
 		}
+
+		//break;
 
 	}
 
